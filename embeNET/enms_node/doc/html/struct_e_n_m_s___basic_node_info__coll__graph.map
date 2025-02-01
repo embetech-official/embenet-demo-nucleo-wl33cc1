@@ -1,0 +1,5 @@
+<map id="ENMS_BasicNodeInfo" name="ENMS_BasicNodeInfo">
+<area shape="rect" id="Node000001" title="Structure defining basic information about the node." alt="" coords="5,93,167,119"/>
+<area shape="rect" id="Node000002" href="$struct_e_n_m_s___stack_version.html" title="Structure defining network stack version." alt="" coords="11,5,161,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="89,45,89,93,83,93,83,45"/>
+</map>

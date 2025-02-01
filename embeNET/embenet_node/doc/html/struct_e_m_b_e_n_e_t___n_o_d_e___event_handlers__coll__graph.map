@@ -1,0 +1,5 @@
+<map id="EMBENET_NODE_EventHandlers" name="EMBENET_NODE_EventHandlers">
+<area shape="rect" id="Node000001" title="Structure holding embeNET Node stack event handlers." alt="" coords="25,93,257,119"/>
+<area shape="rect" id="Node000002" href="$struct_e_m_b_e_n_e_t___n_o_d_e___quick_join_credentials.html" title="Structure describing the data necessary to perform a quick network rejoin." alt="" coords="5,5,277,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="144,45,144,93,139,93,139,45"/>
+</map>

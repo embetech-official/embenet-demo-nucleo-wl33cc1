@@ -1,0 +1,7 @@
+<map id="EMBENET_NODE_JoinConfig" name="EMBENET_NODE_JoinConfig">
+<area shape="rect" id="Node000001" title="Structure defining the network configuration." alt="" coords="27,93,229,119"/>
+<area shape="rect" id="Node000002" href="$struct_e_m_b_e_n_e_t___k1.html" title="128 bit pre&#45;shared key used to authenticate Beacons" alt="" coords="5,5,115,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="80,40,121,91,116,94,76,43"/>
+<area shape="rect" id="Node000003" href="$struct_e_m_b_e_n_e_t___p_s_k.html" title="Constrained join 128&#45;bit pre&#45;shared key. This key should be unique and shared with JRC." alt="" coords="139,5,256,31"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="181,43,140,94,136,91,177,40"/>
+</map>

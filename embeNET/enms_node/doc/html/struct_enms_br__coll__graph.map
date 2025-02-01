@@ -1,0 +1,5 @@
+<map id="EnmsBr" name="EnmsBr">
+<area shape="rect" id="Node000001" title="Structure defining the ENMS BorderRouter service instance." alt="" coords="53,93,125,119"/>
+<area shape="rect" id="Node000002" href="$struct_enms_br_event_handlers.html" title="Structure with user&#45;defined callbacks that handle received information." alt="" coords="5,5,172,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="91,45,91,93,86,93,86,45"/>
+</map>

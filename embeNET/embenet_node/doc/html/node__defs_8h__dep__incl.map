@@ -1,0 +1,10 @@
+<map id="/home/runner&#45;3/runner/_work/embenet_node/embenet_node/include/embenet/node_defs.h" name="/home/runner&#45;3/runner/_work/embenet_node/embenet_node/include/embenet/node_defs.h">
+<area shape="rect" id="Node000001" title="Common API definitions." alt="" coords="31,5,288,60"/>
+<area shape="rect" id="Node000002" href="$node_8h.html" title="embeNET Node API" alt="" coords="95,225,323,280"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="64,69,39,87,20,109,11,127,8,143,11,159,20,176,35,193,53,208,96,229,93,234,50,212,31,197,16,179,6,160,3,143,6,126,16,107,36,83,61,64"/>
+<area shape="rect" id="Node000003" href="$node__diag_8h.html" title="embeNET Node Diagnostic API" alt="" coords="31,115,288,170"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="162,74,162,115,157,115,157,74"/>
+<area shape="rect" id="Node000004" href="$node__event__handlers_8h.html" title="Definition of event handlers for node." alt="" coords="312,108,540,177"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="238,63,344,105,342,110,236,68"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="347,186,262,228,260,223,345,181"/>
+</map>

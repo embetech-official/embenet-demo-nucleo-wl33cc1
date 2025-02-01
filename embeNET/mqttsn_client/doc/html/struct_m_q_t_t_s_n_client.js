@@ -1,0 +1,27 @@
+var struct_m_q_t_t_s_n_client =
+[
+    [ "clientId", "struct_m_q_t_t_s_n_client.html#a14d6c7cdd64e06d3d88530f97454ceef", null ],
+    [ "state", "struct_m_q_t_t_s_n_client.html#ae1da5289666e256ec66a071a3f18b27a", null ],
+    [ "gatewayAddress", "struct_m_q_t_t_s_n_client.html#ac8a1ad6ca95b9d8d6029099c2ef17441", null ],
+    [ "gatewayPort", "struct_m_q_t_t_s_n_client.html#a96a411a47fca23160e6497dda1c2d701", null ],
+    [ "willTopicName", "struct_m_q_t_t_s_n_client.html#a65fbed44b92dcb4a316d4b1a036560c7", null ],
+    [ "willMsg", "struct_m_q_t_t_s_n_client.html#ab9ca97d1a703a8917b7d6f2efe518e33", null ],
+    [ "pingTaskId", "struct_m_q_t_t_s_n_client.html#abe0e24877ffa6888a13c84900df72e58", null ],
+    [ "timeoutTaskId", "struct_m_q_t_t_s_n_client.html#a00ff5f9ad2edb5bae21015da6282c55f", null ],
+    [ "timeoutPingTaskId", "struct_m_q_t_t_s_n_client.html#ae9ddb54be42497d0f245802f7183a2a5", null ],
+    [ "expectedMessageType", "struct_m_q_t_t_s_n_client.html#adf99d7d635f63cad7181360d7c8f8374", null ],
+    [ "keepAliveTimeMs", "struct_m_q_t_t_s_n_client.html#a818473a8d6ee77c10d5b4eff20ddc8c7", null ],
+    [ "gatewayTimeoutMs", "struct_m_q_t_t_s_n_client.html#a94cb7d87bff15b6f4eb00965facd6ab2", null ],
+    [ "pingRespLost", "struct_m_q_t_t_s_n_client.html#a66c08734aaa0dd3eb74b7437ae04479c", null ],
+    [ "lastPacketReceptionTime", "struct_m_q_t_t_s_n_client.html#a85e598d2229dd673331f6b87f5078981", null ],
+    [ "lastPacketSendTime", "struct_m_q_t_t_s_n_client.html#a9c367090a78120811c94b4bd048baab9", null ],
+    [ "packetId", "struct_m_q_t_t_s_n_client.html#a956a9b250a1c33994e89b5e7d9d6c9d9", null ],
+    [ "maxQosRetransmissions", "struct_m_q_t_t_s_n_client.html#a08ed8be988440e26c339ddeb2b328286", null ],
+    [ "publishQosMsg", "struct_m_q_t_t_s_n_client.html#ada74f66070599d22ceb3045125c1f562", null ],
+    [ "subscribeQosMsg", "struct_m_q_t_t_s_n_client.html#a0ecd342dd76d1ac7082384409c4a7981", null ],
+    [ "subscribeTopics", "struct_m_q_t_t_s_n_client.html#a976e88bd7d9a289f98d7c09824e7b340", null ],
+    [ "publishTopics", "struct_m_q_t_t_s_n_client.html#a48ed781a5168cc0d4e0a59229b794bb0", null ],
+    [ "flags", "struct_m_q_t_t_s_n_client.html#a652271c96cc6deb298ac3e2feed63837", null ],
+    [ "udpSocket", "struct_m_q_t_t_s_n_client.html#afbffb24ede1087c477fd4cb660ddcda0", null ],
+    [ "eventHandlers", "struct_m_q_t_t_s_n_client.html#a431347d6e7bb6dc7be9f10b3369a98c4", null ]
+];

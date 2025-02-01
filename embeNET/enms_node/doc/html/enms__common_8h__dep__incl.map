@@ -1,0 +1,7 @@
+<map id="/home/runner&#45;4/runner/_work/embenet_service_enms/embenet_service_enms/src/include/embenet/enms_common.h" name="/home/runner&#45;4/runner/_work/embenet_service_enms/embenet_service_enms/src/include/embenet/enms_common.h">
+<area shape="rect" id="Node000001" title="ENMS service common API." alt="" coords="147,5,371,89"/>
+<area shape="rect" id="Node000002" href="$enms__node_8h.html" title="ENMS Node service API." alt="" coords="5,145,255,214"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="211,101,166,146,162,142,207,97"/>
+<area shape="rect" id="Node000003" href="$enms__receiver_8h.html" title="ENMS BR service API." alt="" coords="278,137,502,221"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="312,97,350,135,347,139,308,101"/>
+</map>

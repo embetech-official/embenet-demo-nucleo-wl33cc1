@@ -1,0 +1,12 @@
+<map id="/home/runner&#45;3/runner/_work/embenet_node/embenet_node/include/embenet_port/radio.h" name="/home/runner&#45;3/runner/_work/embenet_node/embenet_node/include/embenet_port/radio.h">
+<area shape="rect" id="Node000001" title="Radio interface for the EMBENET NODE Port." alt="" coords="130,5,358,75"/>
+<area shape="rect" id="Node000002" href="$timer_8h.html" title="Timer interface for the EMBENET NODE Port." alt="" coords="5,123,168,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="189,77,120,118,117,113,186,72"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="110,196,181,221"/>
+<area shape="poly" id="edge5_Node000001_Node000003" title=" " alt="" coords="226,76,161,186,157,183,222,74"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="243,123,325,148"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="261,74,276,109,271,111,256,76"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="349,123,424,148"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="297,73,359,113,356,117,294,77"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="98,147,129,184,125,187,94,150"/>
+</map>

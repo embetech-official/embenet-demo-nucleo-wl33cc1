@@ -1,0 +1,5 @@
+<map id="EMBENET_NODE_TraceHandlers" name="EMBENET_NODE_TraceHandlers">
+<area shape="rect" id="Node000001" title="structure describing all callbacks, set to NULL to deactivate" alt="" coords="26,93,255,119"/>
+<area shape="rect" id="Node000002" href="$struct_e_m_b_e_n_e_t___t_r_a_c_e___link_layer_telemetry.html" title="Link layer telemetry." alt="" coords="5,5,276,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="143,45,143,93,138,93,138,45"/>
+</map>
