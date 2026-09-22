@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   Commercial
  * @copyright Embetech sp. z o.o.
- * @version   1.1.1
+ * @version   1.1.4
  * @purpose   ENMS service
  * @brief     ENMS service common API
  */
@@ -10,7 +10,7 @@
 #ifndef ENMS_DATA_H_
 #define ENMS_DATA_H_
 
-#include <embetech/compiler_support.h> // from embetech::utils
+#include <embetech/compiler_support.h>
 
 #include <stdbool.h>
 #include <stddef.h>
