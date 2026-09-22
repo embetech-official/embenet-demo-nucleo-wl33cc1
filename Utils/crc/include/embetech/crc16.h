@@ -1,10 +1,18 @@
+/**
+ * @file
+ * @license   MIT License
+ * @copyright Embetech sp. z o.o.
+ * @version   2.0.5
+ * @purpose   16-bit CRC calculation routines
+ * @brief     16-bit CRC calculation routines
+ */
+
 #ifndef CRC16_H_
 #define CRC16_H_
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-/** @defgroup crc16 CRC 16 bit handling routines.
+/** @defgroup crc16 CRC-16 calculation routines
  *  @code
  *  #include <embetech/crc16.h>
  *  @endcode
@@ -19,82 +27,76 @@ extern "C" {
 #endif
 
 /**
- * Returns CRC initialization value for CCITT.
+ * Returns CCITT CRC16 initialization value for CCITT.
  */
 uint16_t CRC16_CCITT_Init(void);
 
 /**
- * Updates CRC with a single byte of input data using the CCITT algorithm.
+ * Updates CCITT CRC16 with a buffer of input data using the Look-up-table.
  *
- * @param[in] byte byte of data.
- * @param[in] crc current value of CRC.
- *
- * @return new CRC value.
- */
-uint16_t CRC16_CCITT_UpdateByte(uint8_t byte, uint16_t crc);
-
-/**
- * Updates CRC with a buffer of input data using the CCITT algorithm.
- *
- * @param[in] in input data buffer.
- * @param[in] size size of input data buffer (in bytes).
+ * @param[in] data input data buffer.
+ * @param[in] data_size size of input data buffer (in bytes).
  * @param[in] crc current value of CRC.
 
- * @return new CRC value.
+ * @return new CCITT CRC16 value.
  */
-uint16_t CRC16_CCITT_UpdateBuf(void const *in, size_t size, uint16_t crc);
+uint16_t CRC16_CCITT_UpdateUsingLut(void const *data, size_t data_size, uint16_t crc);
 
 /**
- * Checks CRC validity for a buffer of data by calculating the CRC and comparing it
- * to a given value. Is uses the CCITT algorithm.
+ * Updates CCITT CRC16 with a buffer of input data using the polynomial division formula.
  *
- * @param[in] in input buffer.
- * @param[in] size size of the input buffer (in bytes).
- * @param[in] expected expected CRC.
- *
- * @return true when value matches, false otherwise.
- *
+ * @param[in] data input data buffer.
+ * @param[in] data_size size of input data buffer (in bytes).
+ * @param[in] crc current value of CRC.
+
+ * @return new CCITT CRC16 value.
  */
-bool CRC16_CCITT_Matches(void const *in, size_t size, uint16_t expected);
+uint16_t CRC16_CCITT_UpdateUsingFormula(void const *data, size_t data_size, uint16_t crc);
 
 /**
- * Returns CRC initialization value for MODBUS.
+ * Finalizes the CCITT CRC16.
+ *
+ * @param[in] crc current value of CRC.
+ *
+ * @return final CCITT CRC16 value.
+ */
+uint16_t CRC16_CCITT_Finalize(uint16_t crc);
+
+/**
+ * Returns MODBUS CRC16 initialization value for MODBUS.
  */
 uint16_t CRC16_MODBUS_Init(void);
 
 /**
- * Updates CRC with a single byte of input data using the MODBUS algorithm.
+ * Updates MODBUS CRC16 with a buffer of input data using the Look-up-table.
  *
- * @param[in] byte byte of data.
- * @param[in] crc current value of CRC.
- *
- * @return new CRC value.
- */
-uint16_t CRC16_MODBUS_UpdateByte(uint8_t byte, uint16_t crc);
-
-/**
- * Updates CRC with a buffer of input data using the MODBUS algorithm.
- *
- * @param[in] in input data buffer.
- * @param[in] size size of input data buffer (in bytes).
+ * @param[in] data input data buffer.
+ * @param[in] data_size size of input data buffer (in bytes).
  * @param[in] crc current value of CRC.
 
- * @return new CRC value.
+ * @return new MODBUS CRC16 value.
  */
-uint16_t CRC16_MODBUS_UpdateBuf(void const *in, size_t size, uint16_t crc);
+uint16_t CRC16_MODBUS_UpdateUsingLut(void const *data, size_t data_size, uint16_t crc);
 
 /**
- * Checks CRC validity for a buffer of data by calculating the CRC and comparing it
- * to a given value. Is uses the MODBUS algorithm.
+ * Updates MODBUS CRC16 with a buffer of input data using the polynomial division formula.
  *
- * @param[in] in input buffer.
- * @param[in] size size of the input buffer (in bytes).
- * @param[in] expected expected CRC.
- *
- * @return true when calculated value matches, false otherwise.
- *
+ * @param[in] data input data buffer.
+ * @param[in] data_size size of input data buffer (in bytes).
+ * @param[in] crc current value of CRC.
+
+ * @return new MODBUS CRC16 value.
  */
-bool CRC16_MODBUS_Matches(void const *in, size_t size, uint16_t expected);
+uint16_t CRC16_MODBUS_UpdateUsingFormula(void const *data, size_t data_size, uint16_t crc);
+
+/**
+ * Finalizes the MODBUS CRC16.
+ *
+ * @param[in] crc current value of CRC.
+ *
+ * @return final MODBUS CRC16 value.
+ */
+uint16_t CRC16_MODBUS_Finalize(uint16_t crc);
 
 #if defined __cplusplus
 }
