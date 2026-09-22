@@ -200,6 +200,10 @@ static void loggerOutput(char c, void* context) {
 #endif
 }
 
+static LOGGER_Time loggerTimeSource() {
+  return (LOGGER_Time) HAL_GetTick();
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -248,6 +252,7 @@ int main(void)
 
     LOGGER_SetOutput(loggerOutput, NULL);
     LOGGER_SetRuntimeLevel(LOGGER_LEVEL_TRACE);
+    LOGGER_SetTimeSource(&loggerTimeSource);
     // You can change this to LOGGER_Enable to enable more logs from embeNET:
     LOGGER_Disable();
 
