@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.1.1
+ * @version   1.1.5
  * @purpose   ENMS service
  * @brief     ENMS Node service API
  */
@@ -56,25 +56,6 @@ typedef struct {
 } EnmsIndicationPolicy;
 
 /**
- * @brief Initializes the ENMS Node service.
- *
- * This function initializes the ENMS Node service. It registers a UDP socket for communication with the ENMS BR service running typically in the
- * border router. It also creates a task that is responsible for periodic sending of ENSM-BASIC-INFO messages.
- *
- * @param[in] enmsNode ENMS Node service instance, not NULL
- * @param[in] port UDP port number over which the service will communicate, not 0, use @ref ENMS_NODE_GetDefaultPort to provide default port
- * @param[in] hwId hardware identifier, not NULL
- * @param[in] indicationPolicy indication policy defining when and how often the service messages should be sent. You may implement your own policy or
- * use one of the built-in policies: @ref ENMS_NODE_GetLargeScalePolicy, @ref ENMS_NODE_GetSmallScalePolicy. Not NULL.
- *
- * @retval ENMS_RESULT_OK if the service was initialized successfully
- * @retval ENMS_RESULT_INVALID_ARGUMENT if at least one of the input arguments was invalid
- * @retval ENMS_RESULT_FAILED_TO_REGISTER_UDP_SOCKET if the service failed to register a UDP socket
- * @retval ENMS_RESULT_FAILED_TO_CREATE_TASK if the service failed to create a task
- */
-EnmsResult ENMS_NODE_Init(EnmsNode *enmsNode, uint16_t port, uint8_t const hwId[16], EnmsIndicationPolicy const *indicationPolicy);
-
-/**
  * Returns the built-in ENMS Node indication policy for large scale networks.
  *
  * @return pointer to the policy
@@ -93,7 +74,26 @@ EnmsIndicationPolicy const *ENMS_NODE_GetSmallScalePolicy(void);
  *
  * @return 0xf0b1 (61617)
  */
-uint16_t ENMS_NODE_GetDefaultPort(void);
+static inline uint16_t ENMS_NODE_GetDefaultPort(void) { return 0xf0b1; }
+
+/**
+ * @brief Initializes the ENMS Node service.
+ *
+ * This function initializes the ENMS Node service. It registers a UDP socket for communication with the ENMS BR service running typically in the
+ * border router. It also creates a task that is responsible for periodic sending of ENMS-BASIC-INFO messages.
+ *
+ * @param[in] enmsNode ENMS Node service instance, not NULL
+ * @param[in] port UDP port number over which the service will communicate, not 0, use ENMS_NODE_GetDefaultPort to provide default port
+ * @param[in] hwId hardware identifier, not NULL
+ * @param[in] indicationPolicy indication policy defining when and how often the service messages should be sent. You may implement your own policy or
+ * use one of the built-in policies: @ref ENMS_NODE_GetLargeScalePolicy, @ref ENMS_NODE_GetSmallScalePolicy. Not NULL.
+ *
+ * @retval ENMS_RESULT_OK if the service was initialized successfully
+ * @retval ENMS_RESULT_INVALID_ARGUMENT if at least one of the input arguments was invalid
+ * @retval ENMS_RESULT_FAILED_TO_REGISTER_UDP_SOCKET if the service failed to register a UDP socket
+ * @retval ENMS_RESULT_FAILED_TO_CREATE_TASK if the service failed to create a task
+ */
+EnmsResult ENMS_NODE_Init(EnmsNode *enmsNode, uint16_t port, uint8_t const hwId[16], EnmsIndicationPolicy const *indicationPolicy);
 
 /**
  * Deinitialize the ENMS Node service.
@@ -215,6 +215,12 @@ EnmsResult ENMS_NODE_UnregisterService(EnmsNode *enmsNode, char const *serviceNa
 EnmsResult ENMS_NODE_SetServiceState(EnmsNode *enmsNode, char const *serviceName, uint8_t serviceState);
 
 /** @} */
+
+/**
+ * Returns the version string of the ENMS Node library.
+ * @return version as a cstring
+ */
+char const *ENMS_NODE_GetVersionString(void);
 
 #ifdef __cplusplus
 }

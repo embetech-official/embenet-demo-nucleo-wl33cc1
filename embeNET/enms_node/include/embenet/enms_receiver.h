@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.1.1
+ * @version   1.1.5
  * @purpose   ENMS service
  * @brief     ENMS BR service API
  */
@@ -34,6 +34,17 @@ typedef struct {
                                  size_t packetsTotal);
   /// Callback that will be called when ENMS-CELLS is received
   void (*onCellsReceived)(const EMBENET_IPV6 *senderAddr, ENMS_CellInfo const *cellInfo, size_t cellsCount, size_t packetNumber, size_t packetsTotal);
+  /** Callback that is be called when ENMS packet is received (BASIC-INFO, SERVICE-INFO, STATUS, NEIGHBORHOOD, CELLS).
+   *
+   * Passes RAW packet data.
+   * @note May be nULL
+   * @note This callback if called always after the packet-specific callbacks
+   *
+   * @param[in] senderAddr Not NULL, IPv6 address of the sender
+   * @param[in] data Not NULL, pointer to the received data
+   * @param[in] dataSize Size of the received data in bytes
+   */
+  void (*onEnmsPacketReceivedRaw)(const EMBENET_IPV6 *senderAddr, uint8_t const *data, size_t dataSize);
 } EnmsBrEventHandlers;
 
 /** Structure defining the ENMS BorderRouter service instance */
@@ -58,7 +69,7 @@ typedef struct {
 EnmsResult ENMS_BR_Init(EnmsBr *enmsBr, uint16_t port, EnmsBrEventHandlers const *eventHandlers);
 
 /**
- * Deinitializes the ENMS BorderRouter service
+ * Deinitialize the ENMS BorderRouter service
  *
  * @param[in] enmsBr ENMS BorderRouter service instance
  *
@@ -129,6 +140,12 @@ EnmsResult ENMS_BR_QueryNeighborhood(EnmsBr *enmsBr, const EMBENET_IPV6 *destina
 EnmsResult ENMS_BR_QueryCells(EnmsBr *enmsBr, const EMBENET_IPV6 *destinationAddress);
 
 /** @} */
+
+/**
+ * Returns the version string of the ENMS Receiver library.
+ * @return version as a cstring
+ */
+char const *ENMS_BR_GetVersionString(void);
 
 #ifdef __cplusplus
 }

@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.0.4
+ * @version   1.1.1
  * @purpose   embeNET PORT API
  * @brief     Timer interface for the EMBENET NODE Port
  */
@@ -34,50 +34,58 @@ typedef int64_t EMBENET_TimeDifferenceUs; ///< Type to store time difference in 
 typedef void (*EMBENET_TIMER_CompareCallback)(void *context);
 
 /**
- * @brief Initializes and starts the timer
+ * @brief Initializes and starts the hardware timer.
  *
- * This function should enable the timer to start counting from 0 upwards. It should also configure the callback function that will be called when the
- * compare event is triggered.
+ * The timer must begin counting from 0 upwards after this call. The supplied callback will be invoked each time the compare event fires
+ * (see @ref EMBENET_TIMER_SetCompare).
  *
- * @param[in] compareCallback function that MUST be invoked upon reaching the time, set by the @ref EMBENET_TIMER_SetCompare function
- * @param[in] context general-purpose context that will be passed to the compareCallback when it is invoked
+ * @param[in] compareCallback function invoked when the compare value is reached; must not be NULL.
+ * @param[in] context         opaque pointer passed to @p compareCallback on each invocation; may be NULL.
  */
 void EMBENET_TIMER_Init(EMBENET_TIMER_CompareCallback compareCallback, void *context);
 
 /**
- * @brief Deinitializes timer
+ * @brief Deinitializes the hardware timer.
  *
- * The deinitialization should stop the timer, and disable interrupts
+ * Stops the timer and disables the compare interrupt.
  */
 void EMBENET_TIMER_Deinit(void);
 
 /**
- * @brief Sets compare time in us, note that timer wraps around EMBENET_TimeUs.
+ * @brief Schedules a compare event at the given absolute timer value.
  *
- * When duration between current timer value and compare value exceeds value returned by EMBENET_TIMER_GetMaxCompareDuration, the event is considered
- * to be in the past, and MUST be triggered instantaneously. Otherwise, the compare interrupt MUST be scheduled. On low performance systems the
- * implementation may introduce guard time (e.g. 20 us). the compareValue in range [current time - guard, current time + guard] SHALL be treated as it
- * would be in the past.
- * @param[in] compareValue value to compare in us.
+ * The implementation must call the @c compareCallback registered in @ref EMBENET_TIMER_Init when the hardware counter reaches @p compareValue.
+ *
+ * Because the underlying counter wraps at 2^32 µs, the implementation uses @ref EMBENET_TIMER_GetMaxCompareDuration to disambiguate past from future:
+ * - If the signed distance from the current counter to @p compareValue exceeds @ref EMBENET_TIMER_GetMaxCompareDuration, the event is considered
+ *   to be in the past and the callback MUST be invoked immediately.
+ * - Otherwise the compare interrupt MUST be scheduled for the future.
+ *
+ * On lower-performance systems the implementation may apply a guard time (e.g. 20 µs): any @p compareValue within
+ * [current_time − guard, current_time + guard] MAY be treated as if it were in the past.
+ *
+ * @param[in] compareValue absolute timer value at which the callback should fire, in microseconds.
  */
 void EMBENET_TIMER_SetCompare(EMBENET_TimeUs compareValue);
 
 /**
- * @brief Reads current time value in us. The returned value represents monotonically increasing time expressed in microseconds modulo 2^32.
- * The returned value MUST be in range [0, 2^32).
- * @return Timer value in us.
+ * @brief Returns the current hardware counter value.
+ *
+ * The counter is monotonically increasing and wraps at 2^32 (i.e. the value is in the range [0, 2^32 − 1]).
+ *
+ * @return Current timer counter value in microseconds.
  */
 EMBENET_TimeUs EMBENET_TIMER_ReadCounter(void);
 
 /**
- * @brief Returns maximum duration that is considered by the timer as the future.
+ * @brief Returns the maximum duration that the timer considers to be in the future.
  *
- * When scheduling compare interrupt, user may set arbitrary compare value. However, the underlying timer may not be monotonic (wraps on 2^32 us),
- * so required compare value MAY be lower than current timer value. This would create confusing situation, where it is not known whether the user
- * wanted the event to trigger in the past, or distant future. When duration between current timer value and compare value exceeds value returned by
- * EMBENET_TIMER_GetMaxCompareDuration, the event is considered to be in the past, and MUST be triggered instantaneously. The returned value should be
- * less or equal the period of the underlying timer. In most implementations, it is sufficient to set this value to {timer period} / 2
- * @return Maximum compare duration expressed in us.
+ * Used by @ref EMBENET_TIMER_SetCompare to resolve the past-vs-future ambiguity introduced by the 32-bit counter wrap.
+ * If the forward distance from the current counter value to a requested compare value exceeds this limit, the compare
+ * event is treated as already past. The returned value must not exceed the timer period (2^32 µs).
+ * In most implementations the appropriate value is (timer period) / 2.
+ *
+ * @return Maximum schedulable compare duration in microseconds.
  */
 EMBENET_TimeUs EMBENET_TIMER_GetMaxCompareDuration(void);
 

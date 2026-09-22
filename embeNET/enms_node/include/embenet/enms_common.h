@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.1.1
+ * @version   1.1.5
  * @purpose   ENMS service
  * @brief     ENMS service common API
  */
@@ -10,7 +10,7 @@
 #ifndef ENMS_DATA_H_
 #define ENMS_DATA_H_
 
-#include <embetech/compiler_support.h> // from embetech::utils
+#include <embetech/compiler_support.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -19,6 +19,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * Returns the version string of the ENMS service.
+ * @return char const*
+ */
+char const *ENMS_GetVersionString(void);
 
 /// Possible ENMS function results
 typedef enum {
@@ -45,8 +51,10 @@ enum {
   ENMS_NODE_SERVICE_NAME_MAX_LENGTH = 16,
 };
 
+EMBEUTILS_PACK_BEGIN()
+
 /** Structure defining network stack version */
-typedef struct EMBEUTILS_PACKED {
+typedef struct {
   uint8_t verHi;
   uint8_t verLo;
   uint16_t revision;
@@ -56,7 +64,7 @@ typedef struct EMBEUTILS_PACKED {
 EMBEUTILS_STATIC_ASSERT(sizeof(ENMS_StackVersion) == 4, "sizeof(ENMS_StackVersion) should be 4");
 
 /** Structure defining basic information about the node */
-typedef struct EMBEUTILS_PACKED {
+typedef struct {
   /// Hardware identifier. By default this is the MD5 hash of the hardware nameplate record.
   uint8_t hwId[16];
   /// Network stack version
@@ -67,7 +75,7 @@ typedef struct EMBEUTILS_PACKED {
 EMBEUTILS_STATIC_ASSERT(sizeof(ENMS_BasicNodeInfo) == 20, "sizeof(ENMS_BasicNodeInfo) should be 20");
 
 /** Information about the service */
-typedef struct EMBEUTILS_PACKED {
+typedef struct {
   uint8_t serviceNo;                                   ///< Index of the service (0..serviceCount-1)
   char serviceName[ENMS_NODE_SERVICE_NAME_MAX_LENGTH]; ///< Name of the service (NULL-terminated string)
   uint8_t serviceState;                                ///< Service state: 0 - inactive, 1 - active
@@ -82,7 +90,7 @@ enum {
 };
 
 /// Structure holding status information about the node
-typedef struct EMBEUTILS_PACKED {
+typedef struct {
   uint64_t parentEUI64;    ///< EUI64 of the parent node
   int8_t parentRssi;       ///< RSSI of the parent node
   uint16_t parentPdr;      ///< Packet delivery rate expressed in 0.01% units (0..10000)
@@ -128,7 +136,7 @@ typedef enum {
 } ENMS_NeighborRole;
 
 /// Structure holding status information about the node
-typedef struct EMBEUTILS_PACKED {
+typedef struct {
   /// role and neighbor field length (compression is unimplemented), @ref ENMS_NeighborRole
   uint8_t roleNLength;
   /// EUI64 of the parent node
@@ -158,7 +166,7 @@ typedef enum {
 } ENMS_CellType;
 
 /// Structure holding status information about the node
-typedef struct EMBEUTILS_PACKED {
+typedef struct {
   uint8_t function;        ///< Denotes cell role and type
   uint16_t pdr;            ///< Packet delivery ratio expressed in 0.01% units (0..10000), valid only for CELL_TYPE_TX and CELL_TYPE_TXRX
   uint8_t slotOffset;      ///< Slot offset
@@ -168,6 +176,8 @@ typedef struct EMBEUTILS_PACKED {
 
 // Check structure packing
 EMBEUTILS_STATIC_ASSERT(sizeof(ENMS_CellInfo) == 13, "sizeof(ENMS_CellInfo) should be 13");
+
+EMBEUTILS_PACK_END()
 
 #ifdef __cplusplus
 }

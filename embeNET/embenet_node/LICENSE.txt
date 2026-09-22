@@ -1,0 +1,67 @@
+embeNET Node — Evaluation License
+Copyright (c) 2026 Embetech sp. z o.o. All rights reserved.
+
+================================================================================
+EVALUATION LICENSE — LIMITED, NON-PRODUCTION USE ONLY
+================================================================================
+
+This software library ("embeNET Node") is the proprietary
+product of Embetech sp. z o.o. ("Embetech") and is protected by copyright law
+and international treaties.
+
+--------------------------------------------------------------------------------
+GRANT OF EVALUATION RIGHTS
+--------------------------------------------------------------------------------
+
+Embetech grants the recipient a non-exclusive, non-transferable, revocable
+right to use the embeNET Node solely for the purpose of
+internal technical evaluation, for a period of sixty (60) days from the date
+the recipient first obtains the software ("Evaluation Period"), unless a
+longer period is agreed in writing with Embetech.
+
+--------------------------------------------------------------------------------
+RESTRICTIONS
+--------------------------------------------------------------------------------
+
+During and after the Evaluation Period, the recipient shall NOT:
+
+  - Use the embeNET Node, or any product incorporating it,
+    in a production environment or for any revenue-generating or otherwise
+    commercial purpose.
+  - Redistribute, sublicense, or otherwise make the embeNET Node
+    available to any third party outside the evaluating
+    organization.
+  - Continue using the embeNET Node after expiry of the
+    Evaluation Period without obtaining a commercial license from Embetech
+    under LicenseRef-Embetech-Commercial.
+
+--------------------------------------------------------------------------------
+NO SUPPORT OR WARRANTY
+--------------------------------------------------------------------------------
+
+The embeNET Node is provided under this Evaluation License
+WITHOUT ANY TECHNICAL SUPPORT, MAINTENANCE, OR SERVICE-LEVEL COMMITMENT OF
+ANY KIND.
+
+THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL
+EMBETECH SP. Z O.O. BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY
+ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+--------------------------------------------------------------------------------
+MOVING TO A COMMERCIAL LICENSE
+--------------------------------------------------------------------------------
+
+To continue use beyond the Evaluation Period, or for any production or
+commercial purpose, please contact:
+
+  Embetech sp. z o.o.
+  ul. Czarnowiejska 36/017
+  30-054 Krakow, Poland
+
+  E-mail : contact@embe.tech
+  Web    : www.embe.tech
+
+================================================================================

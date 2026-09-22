@@ -2,16 +2,15 @@
  * @file
  * @license   MIT License
  * @copyright Embetech sp. z o.o.
- * @version   1.0.1
+ * @version   1.0.5
  * @purpose   General-purpose ring buffer
  * @brief     Ring Buffer API
- * 
+ *
  * This module implements a basic, general-purpose ring buffer.
  */
 
 #ifndef RING_BUFFER_H_
 #define RING_BUFFER_H_
-#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,89 +24,108 @@ extern "C" {
  * @{
  */
 
-/** Structure describing the ring buffer. */
+/**
+ * @brief Structure describing the ring buffer.
+ */
 typedef struct {
-  /// pointer to the area of memory, where data will be stored
+  /// Pointer to the memory region used to store buffer data.
   uint8_t *dataBuffer;
-  /// size of the data buffer (in bytes)
+
+  /// Size of the data buffer in bytes.
   size_t dataBufferSize;
-  /// number of elements currently stored within the buffer
+
+  /// Number of elements currently stored in the buffer.
   size_t count;
-  /// pointer to the next element in the buffer that will be written
+
+  /// Pointer to the next element position to be written.
   uint8_t *head;
-  /// pointer to the next element in the buffer that will be read
+
+  /// Pointer to the next element position to be read.
   uint8_t *tail;
 } RingBuffer;
 
 /**
- * Initializes the given ring buffer structure.
+ * @brief Initialize the given ring buffer instance.
  *
- * @param ringBuffer pointer to a \ref RingBuffer structure
- * @param dataBuffer pointer to a location in memory, where the ring buffer data will be stored
- * @param dataBufferSize size in bytes of the dataBuffer
- * @return true if all arguments are valid and the ring buffer is initialized successfully, false otherwise
+ * @param[in] instance Pointer to a @ref RingBuffer structure.
+ * @param[in] dataBuffer Pointer to memory where ring buffer data will be stored.
+ * @param[in] dataBufferSize Size of `dataBuffer` in bytes.
+ *
+ * @return true if arguments are valid and initialization succeeds; false otherwise.
  */
-bool RingBuffer_Init(RingBuffer *ringBuffer, uint8_t *dataBuffer, size_t dataBufferSize);
+bool RingBuffer_Init(RingBuffer *instance, uint8_t *dataBuffer, size_t dataBufferSize);
 
 /**
- * Clears contents of the given ring buffer.
+ * @brief Clear contents of the given ring buffer.
  *
- * @param ringBuffer pointer to a \ref RingBuffer structure
- * @return true if the ring buffer is cleared successfully, false otherwise
+ * @param[in] instance Pointer to a @ref RingBuffer structure.
+ *
+ * @return true if the ring buffer is cleared successfully; false otherwise.
  */
-bool RingBuffer_Clear(RingBuffer *ringBuffer);
+bool RingBuffer_Clear(RingBuffer *instance);
 
 /**
- * Checks if the given ring buffer is empty.
+ * @brief Check if the given ring buffer is empty.
  *
- * @param ringBuffer pointer to a \ref RingBuffer structure
- * @return true if the ring buffer holds no data, false otherwise
+ * @param[in] instance Pointer to a @ref RingBuffer structure.
+ *
+ * @return true if the ring buffer holds no data; false otherwise.
  */
-bool RingBuffer_IsEmpty(RingBuffer const *ringBuffer);
+bool RingBuffer_IsEmpty(RingBuffer const *instance);
 
 /**
- * Gets the length (in bytes) of the data stored in the given ring buffer.
+ * @brief Get the length in bytes of data stored in the ring buffer.
  *
- * @param ringBuffer pointer to a \ref RingBuffer structure
- * @return length (in bytes) of the data stored in the ring buffer
+ * @param[in] instance Pointer to a @ref RingBuffer structure.
+ *
+ * @return Length in bytes of the data stored in the ring buffer.
  */
-size_t RingBuffer_GetLen(RingBuffer const *ringBuffer);
+size_t RingBuffer_GetLen(RingBuffer const *instance);
 
 /**
- * Returns the capacity (in bytes) of the given buffer.
+ * @brief Get the capacity in bytes of the given buffer.
  *
- * @param ringBuffer pointer to a \ref RingBuffer structure
- * @return capacity (in bytes) of the ring buffer (how much characters can it store)
+ * @param[in] instance Pointer to a @ref RingBuffer structure.
+ *
+ * @return Capacity in bytes of the ring buffer.
  */
-size_t RingBuffer_GetCapacity(RingBuffer const *ringBuffer);
+size_t RingBuffer_GetCapacity(RingBuffer const *instance);
 
 /**
- * Returns the space (in bytes) left in the given buffer.
+ * @brief Get the remaining free space in bytes in the buffer.
  *
- * @param ringBuffer pointer to a \ref RingBuffer structure
- * @return space (in bytes) of the ring buffer (how much characters can be still written to it)
+ * @param[in] instance Pointer to a @ref RingBuffer structure.
+ *
+ * @return Free space in bytes available in the ring buffer.
  */
-size_t RingBuffer_GetSpace(RingBuffer const *ringBuffer);
+size_t RingBuffer_GetSpace(RingBuffer const *instance);
 
 /**
- * Appends a single character to the ring buffer. The stored data length will be
- * increased by 1.
+ * @brief Append a single character to the ring buffer.
  *
- * @param ringBuffer pointer to a \ref RingBuffer structure
- * @param c character to append
- * @return true if the character was added successfully, false otherwise
+ * @param[in] instance Pointer to a @ref RingBuffer structure.
+ * @param[in] data Character to append.
+ *
+ * @return true if the character was added successfully; false otherwise.
  */
-bool RingBuffer_PutChar(RingBuffer *ringBuffer, uint8_t c);
+bool RingBuffer_PutChar(RingBuffer *instance, uint8_t data);
 
 /**
- * Pulls out a single character from the ring buffer. The stored data length will be
- * decreased by 1.
+ * @brief Retrieve a single character from the ring buffer.
  *
- * @param ringBuffer pointer to a \ref RingBuffer structure
- * @param c pointer to a place where character will be stored
- * @return true if the character was pulled out successfully, false otherwise
+ * @param[in] instance Pointer to a @ref RingBuffer structure.
+ * @param[in,out] readData Pointer to where the read character will be stored.
+ *
+ * @return true if the character was retrieved successfully; false otherwise.
  */
-bool RingBuffer_GetChar(RingBuffer *ringBuffer, uint8_t *c);
+bool RingBuffer_GetChar(RingBuffer *instance, uint8_t *readData);
+
+/**
+ * @brief Get library version as a NUL-terminated string.
+ *
+ * @return Pointer to a read-only, statically allocated string in semantic version format (e.g., "1.2.3+extra_info"). Must not be freed or modified.
+ */
+char const *RingBuffer_GetVersionString(void);
 
 /**
  * @}

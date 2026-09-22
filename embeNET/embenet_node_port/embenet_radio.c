@@ -38,12 +38,12 @@
 
 typedef enum {
   /// do not change order, nor count of entries without pins variable update
-  PIN_1 = 0, // GPIOA_PIN_6 GPIO28 MORPHO_CN4_3
-  PIN_2,     // GPIOA_PIN_7 GPIO29 MORPHO_CN4_5
-  PIN_3,     // GPIOA_PIN_5 GPIO41 MORPHO_CN4_21
-  PIN_4      // GPIOA_PIN_13 GPIO47 MORPHO_CN4_27
+  PIN_1 = 0, // GPIOB_PIN_0 GPIO11 ARDUINO_CN7.1_A0 MORPHO CN1 28
+  PIN_2,     // GPIOB_PIN_1 GPIO12 ARDUINO_CN7.2_A1 MORPHO CN1 30
+  PIN_3,     // GPIOB_PIN_2 GPIO17 ARDUINO_CN7.3_A2 MORPHO CN1 32
+  PIN_4      // GPIOB_PIN_3 GPIO18 ARDUINO_CN7.4_A3 MORPHO CN1 34
 } PIN;
-static uint32_t const pins[4] = {LL_GPIO_PIN_6, LL_GPIO_PIN_7, LL_GPIO_PIN_5, LL_GPIO_PIN_13};
+static uint32_t const pins[4] = {LL_GPIO_PIN_0, LL_GPIO_PIN_1, LL_GPIO_PIN_2, LL_GPIO_PIN_3};
 
 static void PINS_Init(void) {
   static LL_GPIO_InitTypeDef gpioInit = {
@@ -53,11 +53,11 @@ static void PINS_Init(void) {
       .OutputType = LL_GPIO_OUTPUT_PUSHPULL,
       .Pull = LL_GPIO_PULL_DOWN,
   };
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  LL_GPIO_Init(GPIOA, &gpioInit);
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  LL_GPIO_Init(GPIOB, &gpioInit);
 }
-static void PINS_High(PIN pin) { LL_GPIO_SetOutputPin(GPIOA, pins[pin]); }
-static void PINS_Low(PIN pin) { LL_GPIO_ResetOutputPin(GPIOA, pins[pin]); }
+static void PINS_High(PIN pin) { LL_GPIO_SetOutputPin(GPIOB, pins[pin]); }
+static void PINS_Low(PIN pin) { LL_GPIO_ResetOutputPin(GPIOB, pins[pin]); }
 #endif // defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
 
 // structure to hold radio variables and states
@@ -80,13 +80,14 @@ enum {
   IdleToRxReadyUs = (90 + 100),
   ActiveToTxReadyUs = (90 + 100),
   ActiveToRxReadyUs = (90 + 100),
-  TxDelayUs = (425),
-  RxDelayUs = TxDelayUs, // between GO signal and start listening - cannot measure but could be the same as delayTx
-  TxRxStartDelayUs = (1260),
+  TxDelayUs = (45),          // measured, @RADIO_TxNow and appearance of signal
+  RxDelayUs = TxDelayUs,     // between GO signal and start listening - cannot measure but could be the same as delayTx
+  TxRxStartDelayUs = (1640), // measured, between appearance of the signal and the start of the sync ISR
 
   TxStartOffsetUs = (425), // difference between the the appearance of first bit of preamble on radio interface and TX StartOfFrame callback (added to
                            // Tx StartOfFrame callback)
-  RxEndOffsetUs = (291),   // difference between the RX EndOfFrame and TX EndOfFrame callback (added to TX EndOfFrame)
+  RxEndOffsetUs = (-350),  // difference between the RX EndOfFrame and TX EndOfFrame callback (added to TX EndOfFrame)
+  TxEndOffsetUs = (-60),   // difference between the RX EndOfFrame and TX EndOfFrame callback (added to TX EndOfFrame)
 
   MaxTxpDbm = 14,
   MinTxpDbm = 0,
@@ -95,7 +96,7 @@ enum {
   SensitivityDbm = -100,
 
   ChannelWidthHz = 100000,
-  BaseFrequencyHz = 863100000 + 4000, /*calibration offset*/
+  BaseFrequencyHz = 863100000, /*calibration offset*/
 };
 
 EMBENET_RADIO_Status EMBENET_RADIO_Init(void) {
@@ -179,6 +180,7 @@ EMBENET_RADIO_Status EMBENET_RADIO_Idle(void) {
 EMBENET_RADIO_Status EMBENET_RADIO_TxEnable(EMBENET_RADIO_Channel channel, EMBENET_RADIO_Power txp, uint8_t const *psdu, size_t psduLen) {
 #if defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
   PINS_High(PIN_1);
+  PINS_High(PIN_3);
 #endif
   LL_MRSubG_StrobeCommand(CMD_SABORT);
   LL_MRSubG_StrobeCommand(CMD_LOCKTX);
@@ -201,6 +203,7 @@ EMBENET_RADIO_Status EMBENET_RADIO_TxEnable(EMBENET_RADIO_Channel channel, EMBEN
   d.frameReady = false;
 #if defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
   PINS_Low(PIN_1);
+  PINS_Low(PIN_3);
 #endif
   return EMBENET_RADIO_STATUS_SUCCESS;
 }
@@ -208,6 +211,7 @@ EMBENET_RADIO_Status EMBENET_RADIO_TxEnable(EMBENET_RADIO_Channel channel, EMBEN
 EMBENET_RADIO_Status EMBENET_RADIO_TxNow(void) {
 #if defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
   PINS_High(PIN_1);
+  PINS_High(PIN_3);
 #endif
   LL_MRSubG_StrobeCommand(CMD_TX);
   if(d.onFrameStart) {
@@ -215,6 +219,7 @@ EMBENET_RADIO_Status EMBENET_RADIO_TxNow(void) {
   }
 #if defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
   PINS_Low(PIN_1);
+  PINS_Low(PIN_3);
 #endif
   return EMBENET_RADIO_STATUS_SUCCESS;
 }
@@ -222,6 +227,7 @@ EMBENET_RADIO_Status EMBENET_RADIO_TxNow(void) {
 EMBENET_RADIO_Status EMBENET_RADIO_RxEnable(EMBENET_RADIO_Channel channel) {
 #if defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
   PINS_High(PIN_1);
+  PINS_High(PIN_4);
 #endif
   LL_MRSubG_StrobeCommand(CMD_SABORT);
   LL_MRSubG_StrobeCommand(CMD_LOCKRX);
@@ -236,6 +242,7 @@ EMBENET_RADIO_Status EMBENET_RADIO_RxEnable(EMBENET_RADIO_Channel channel) {
   d.frameReady = false;
 #if defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
   PINS_Low(PIN_1);
+  PINS_Low(PIN_4);
 #endif
 
   return EMBENET_RADIO_STATUS_SUCCESS;
@@ -244,10 +251,12 @@ EMBENET_RADIO_Status EMBENET_RADIO_RxEnable(EMBENET_RADIO_Channel channel) {
 EMBENET_RADIO_Status EMBENET_RADIO_RxNow(void) {
 #if defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
   PINS_High(PIN_1);
+  PINS_High(PIN_4);
 #endif
   LL_MRSubG_StrobeCommand(CMD_RX);
 #if defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
   PINS_Low(PIN_1);
+  PINS_Low(PIN_4);
 #endif
   return EMBENET_RADIO_STATUS_SUCCESS;
 }
@@ -327,7 +336,7 @@ EMBENET_RADIO_Capabilities const *EMBENET_RADIO_GetCapabilities(void) {
   return &timings;
 }
 
-void HAL_MRSubG_IRQ_Callback(void) { EXPECT_ABORT("LOL"); }
+void HAL_MRSubG_IRQ_Callback(void) { EXPECT_ABORT("Check MRSUBG_IRQHandler linkage, HAL interrupt callback must not be called"); }
 
 void MRSUBG_IRQHandler(void) {
 #if defined(TOGGLE_PINS) && (TOGGLE_PINS == 1)
@@ -346,7 +355,7 @@ void MRSUBG_IRQHandler(void) {
     d.frameRssi = HAL_MRSubG_GetRssidBm();
 
     if(d.onFrameEnd) {
-      d.onFrameEnd(d.handlersContext, timestamp);
+      d.onFrameEnd(d.handlersContext, timestamp + RxEndOffsetUs);
     }
   }
   if(irq & MR_SUBG_GLOB_STATUS_RFSEQ_IRQ_STATUS_RX_OK_F) {
@@ -358,7 +367,7 @@ void MRSUBG_IRQHandler(void) {
     d.frameRssi = HAL_MRSubG_GetRssidBm();
 
     if(d.onFrameEnd) {
-      d.onFrameEnd(d.handlersContext, timestamp);
+      d.onFrameEnd(d.handlersContext, timestamp + RxEndOffsetUs);
     }
   }
 
@@ -368,7 +377,7 @@ void MRSUBG_IRQHandler(void) {
     LL_MRSubG_StrobeCommand(CMD_SABORT);
 
     if(d.onFrameEnd) {
-      d.onFrameEnd(d.handlersContext, timestamp + RxEndOffsetUs);
+      d.onFrameEnd(d.handlersContext, timestamp + TxEndOffsetUs);
     }
   }
 

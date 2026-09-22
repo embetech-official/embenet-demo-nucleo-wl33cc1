@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.0.4
+ * @version   1.1.1
  * @purpose   embeNET PORT API
  * @brief     Radio interface for the EMBENET NODE Port
  *
@@ -85,160 +85,200 @@ extern "C" {
  * @{
  */
 
-typedef int8_t EMBENET_RADIO_SetParamType; ///< radio implementation specific parameter type
-typedef int8_t EMBENET_RADIO_GetParamType; ///< radio implementation specific parameter type
-typedef uint8_t EMBENET_RADIO_Channel;     ///< radio channel
-typedef int8_t EMBENET_RADIO_Power;        ///< radio power in dBm
+typedef int8_t EMBENET_RADIO_SetParamType; ///< Radio implementation-specific parameter type for set operations.
+typedef int8_t EMBENET_RADIO_GetParamType; ///< Radio implementation-specific parameter type for get operations.
+typedef uint8_t EMBENET_RADIO_Channel;     ///< Radio channel number.
+typedef int8_t EMBENET_RADIO_Power;        ///< Radio power level in dBm.
 
-/// Radio timings structure, holds execution and radio configuration time values
+/**
+ * @brief Radio timing and capability parameters reported by the port implementation.
+ *
+ * All timing fields are worst-case upper bounds in microseconds.
+ */
 typedef struct {
-  EMBENET_TimeUs idleToTxReady;   ///< maximum time needed to become TX ready from idle state (EMBENET_RADIO_Idle() -> EMBENET_RADIO_TxReady())
-  EMBENET_TimeUs idleToRxReady;   ///< maximum time needed to become RX ready from idle state (EMBENET_RADIO_Idle() -> EMBENET_RADIO_RxReady())
-  EMBENET_TimeUs activeToTxReady; ///< maximum time needed to become TX ready from active state ('end of frame callback' -> EMBENET_RADIO_TxReady())
-  EMBENET_TimeUs activeToRxReady; ///< maximum time needed to become RX ready from active state ('end of frame callback' -> EMBENET_RADIO_RxReady())
-  EMBENET_TimeUs txDelay;         ///< maximum time needed from TX ready to appearance of radio signal on output port
-  EMBENET_TimeUs rxDelay;         ///< maximum time needed to switch from RX ready to listening
-  EMBENET_TimeUs txRxStartDelay;  ///< the time between the appearance of first bit of preamble and a call of startOfFrame callback
+  EMBENET_TimeUs idleToTxReady;   ///< Maximum time to reach TX_READY from IDLE (@ref EMBENET_RADIO_Idle → TX_READY).
+  EMBENET_TimeUs idleToRxReady;   ///< Maximum time to reach RX_READY from IDLE (@ref EMBENET_RADIO_Idle → RX_READY).
+  EMBENET_TimeUs activeToTxReady; ///< Maximum time to reach TX_READY from ACTIVE (end-of-frame callback → TX_READY).
+  EMBENET_TimeUs activeToRxReady; ///< Maximum time to reach RX_READY from ACTIVE (end-of-frame callback → RX_READY).
+  EMBENET_TimeUs txDelay;         ///< Maximum time from TX_READY until the radio signal appears on the antenna port.
+  EMBENET_TimeUs rxDelay;         ///< Maximum time from RX_READY until the radio starts listening.
+  EMBENET_TimeUs txRxStartDelay;  ///< Time between the appearance of the first preamble bit and the startOfFrame callback.
 
-  EMBENET_RADIO_Power sensitivity;    ///< input power level below which PER significantly grows up eg. from 0% to 1% for packet length of 30B
-  EMBENET_RADIO_Power maxOutputPower; ///< maximum output power radio can set
-  EMBENET_RADIO_Power minOutputPower; ///< minimum output power radio can set
+  EMBENET_RADIO_Power sensitivity;    ///< Minimum receive power (dBm) below which PER rises significantly (e.g. from 0% to 1% for a 30-byte packet).
+  EMBENET_RADIO_Power maxOutputPower; ///< Maximum TX output power the radio can produce, in dBm.
+  EMBENET_RADIO_Power minOutputPower; ///< Minimum TX output power the radio can produce, in dBm.
 } EMBENET_RADIO_Capabilities;
 
-/// Defines RADIO layer operation status
+/**
+ * @brief Radio layer operation status codes.
+ */
 typedef enum {
-  EMBENET_RADIO_STATUS_SUCCESS = 0,
-  EMBENET_RADIO_STATUS_GENERAL_ERROR = -1,
-  EMBENET_RADIO_STATUS_COMMUNICATION_ERROR = -2,
-  EMBENET_RADIO_STATUS_WRONG_STATE = -3,
-  EMBENET_RADIO_STATUS_CHANNEL_BUSY = -4,
+  EMBENET_RADIO_STATUS_SUCCESS             = 0,   ///< Operation completed successfully.
+  EMBENET_RADIO_STATUS_GENERAL_ERROR       = -1,  ///< Unspecified error.
+  EMBENET_RADIO_STATUS_COMMUNICATION_ERROR = -2,  ///< Radio hardware communication error (e.g. SPI failure).
+  EMBENET_RADIO_STATUS_WRONG_STATE         = -3,  ///< Function called in an incorrect radio state.
+  EMBENET_RADIO_STATUS_CHANNEL_BUSY        = -4,  ///< The requested channel is busy (CCA failure).
 
-  EMBENET_RADIO_STATUS_PARAMETER_NOT_IMPLEMENTED = -30,
-  EMBENET_RADIO_STATUS_PARAMETER_ARGS_WRONG_NUMBER = -31,
-  EMBENET_RADIO_STATUS_PARAMETER_ARG1_OUT_OF_BOUNDS = -32,
-  EMBENET_RADIO_STATUS_PARAMETER_ARG2_OUT_OF_BOUNDS = -33,
-  EMBENET_RADIO_STATUS_PARAMETER_ARG3_OUT_OF_BOUNDS = -34,
-  EMBENET_RADIO_STATUS_PARAMETER_ARGS_OUT_OF_BOUNDS = -35
+  EMBENET_RADIO_STATUS_PARAMETER_NOT_IMPLEMENTED    = -30, ///< The requested parameter is not supported by this implementation.
+  EMBENET_RADIO_STATUS_PARAMETER_ARGS_WRONG_NUMBER  = -31, ///< Wrong number of arguments provided for the parameter.
+  EMBENET_RADIO_STATUS_PARAMETER_ARG1_OUT_OF_BOUNDS = -32, ///< First argument is out of the allowed range.
+  EMBENET_RADIO_STATUS_PARAMETER_ARG2_OUT_OF_BOUNDS = -33, ///< Second argument is out of the allowed range.
+  EMBENET_RADIO_STATUS_PARAMETER_ARG3_OUT_OF_BOUNDS = -34, ///< Third argument is out of the allowed range.
+  EMBENET_RADIO_STATUS_PARAMETER_ARGS_OUT_OF_BOUNDS = -35, ///< One or more arguments are out of the allowed range.
 } EMBENET_RADIO_Status;
 
+/**
+ * @brief PSDU length limits.
+ */
 enum {
-  EMBENET_RADIO_MAX_PSDU_LENGTH = 128,
-  EMBENET_RADIO_MIN_PSDU_LENGTH = 1,
+  EMBENET_RADIO_MAX_PSDU_LENGTH = 128, ///< Maximum allowed PSDU length in bytes.
+  EMBENET_RADIO_MIN_PSDU_LENGTH = 1,   ///< Minimum allowed PSDU length in bytes.
 };
 
 /**
- * @brief Radio callback handler.
+ * @brief Timestamped radio event callback.
  *
- * @param[in] context context pointer that will be passed to callback function
- * @param[in] timestamp callback function to get time in ns.
+ * Called by the radio driver to report a frame boundary event (start or end of frame).
+ *
+ * @param[in] context opaque context pointer as provided to @ref EMBENET_RADIO_SetCallbacks.
+ * @param[in] timestamp hardware timer value at the moment of the event, in microseconds.
  */
 typedef void (*EMBENET_RADIO_CaptureCbt)(void *context, EMBENET_TimeUs timestamp);
 
-/// Type used to store Received packet information
+/**
+ * @brief Information about a received frame, filled by @ref EMBENET_RADIO_GetReceivedFrame.
+ */
 typedef struct {
-  EMBENET_RADIO_Power rssi; ///< Received Signal Strength Indicator
-  uint8_t lqi;              ///< Link Quality Indicator
-  bool crcValid;            ///< Must be invalid if mpduLength < EMBENET_RADIO_MIN_PSDU_LENGTH or mpduLength > EMBENET_RADIO_MAX_PSDU_LENGTH
-  size_t mpduLength;        ///< Length of received payload
+  EMBENET_RADIO_Power rssi; ///< Received Signal Strength Indicator in dBm.
+  uint8_t lqi;              ///< Link Quality Indicator (implementation-defined scale).
+  bool crcValid;            ///< true if the CRC check passed; always false when mpduLength is outside [EMBENET_RADIO_MIN_PSDU_LENGTH, EMBENET_RADIO_MAX_PSDU_LENGTH].
+  size_t mpduLength;        ///< Number of bytes written into the caller-supplied buffer (clamped to bufferLength).
 } EMBENET_RADIO_RxInfo;
 
-/// Type defining continuous TX mode
+/**
+ * @brief Continuous transmission mode.
+ */
 typedef enum {
-  EMBENET_RADIO_CONTINUOUS_TX_MODE_PN9,
-  EMBENET_RADIO_CONTINUOUS_TX_MODE_CARRIER,
+  EMBENET_RADIO_CONTINUOUS_TX_MODE_PN9,     ///< Continuous transmission of a PN9 pseudo-random sequence.
+  EMBENET_RADIO_CONTINUOUS_TX_MODE_CARRIER, ///< Continuous unmodulated carrier wave.
 } EMBENET_RADIO_ContinuousTxMode;
 
 /**
- * @brief Initializes and sets transceiver state to IDLE
+ * @brief Initializes the radio transceiver and places it in the IDLE state.
+ *
  * @retval EMBENET_RADIO_STATUS_SUCCESS on success
- * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR on error
+ * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR if the radio hardware does not respond
  */
 EMBENET_RADIO_Status EMBENET_RADIO_Init(void);
 
 /**
- * @brief Sets transceiver callbacks.
- * @param[in] onStartFrame - called when sync word is detected with a drawn back timestamp indicating the start of frame transmission, NULL is
- * considered as no callback.
- * @param[in] onEndFrame - called when the last bit of frame was received, NULL is considered as no callback.
- * @param[in] cbtContext - argument with which the handler will be called.
+ * @brief Registers frame boundary callbacks.
+ *
+ * @param[in] onStartFrame callback invoked when the sync word of an incoming or outgoing frame is detected,
+ *                         with a back-calculated timestamp of the first bit; NULL disables this callback.
+ * @param[in] onEndFrame   callback invoked when the last bit of a frame has been transmitted or received; NULL disables this callback.
+ * @param[in] cbtContext   opaque pointer passed as the first argument to both callbacks.
  */
 void EMBENET_RADIO_SetCallbacks(EMBENET_RADIO_CaptureCbt onStartFrame, EMBENET_RADIO_CaptureCbt onEndFrame, void *cbtContext);
 
 /**
- * Deinitializes and puts transceiver in lowest energy consumption mode possible
+ * @brief Deinitializes the radio transceiver and places it in the lowest energy consumption mode available.
  */
 void EMBENET_RADIO_Deinit(void);
 
 /**
- * @brief Aborts any pending reception or transmission, clears internal buffers and puts radio in IDLE state
+ * @brief Aborts any ongoing reception or transmission, clears internal buffers, and places the radio in the IDLE state.
+ *
+ * May be called from any state except UNINITIALIZED.
+ *
  * @retval EMBENET_RADIO_STATUS_SUCCESS on success
- * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR on error
+ * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR if the radio hardware does not respond
  */
 EMBENET_RADIO_Status EMBENET_RADIO_Idle(void);
 
 /**
- * @brief Wakes transceiver from IDLE state.
- *        Prepares transceiver for transmission. Load new data (packet) to receiver's buffer/fifo.
- * @param[in] channel - Channel number.
- * @param[in] txp transmit power in dBm
- * @param[in] psdu - data pointer, must not be NULL
- * @param[in] psduLen - data length in bytes (must be in range EMBENET_RADIO_MIN_PSDU_LENGTH to EMBENET_RADIO_MAX_PSDU_LENGTH)
+ * @brief Wakes the transceiver from IDLE and loads a frame into the TX buffer ready for immediate transmission.
+ *
+ * Transitions the radio from IDLE to TX_READY. The frame data pointed to by @p psdu must remain valid
+ * until @ref EMBENET_RADIO_TxNow has been called and the end-of-frame callback has fired.
+ *
+ * @param[in] channel radio channel to transmit on
+ * @param[in] txp     transmit power in dBm
+ * @param[in] psdu    pointer to the frame payload; must not be NULL
+ * @param[in] psduLen frame length in bytes; must be in the range [EMBENET_RADIO_MIN_PSDU_LENGTH, EMBENET_RADIO_MAX_PSDU_LENGTH]
+ *
  * @retval EMBENET_RADIO_STATUS_SUCCESS on success
- * @retval EMBENET_RADIO_STATUS_PARAMETER_ARGS_OUT_OF_BOUNDS when psduLen < EMBENET_RADIO_MIN_PSDU_LENGTH or psduLen > EMBENET_RADIO_MAX_PSDU_LENGTH
- * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR on error
+ * @retval EMBENET_RADIO_STATUS_PARAMETER_ARGS_OUT_OF_BOUNDS if @p psduLen is outside the valid range
+ * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR if the radio hardware does not respond
  */
 EMBENET_RADIO_Status EMBENET_RADIO_TxEnable(EMBENET_RADIO_Channel channel, EMBENET_RADIO_Power txp, uint8_t const *psdu, size_t psduLen);
 
 /**
- * @brief Triggers transmission.
+ * @brief Triggers immediate transmission of the frame previously loaded by @ref EMBENET_RADIO_TxEnable.
+ *
+ * Transitions the radio from TX_READY to TX.
+ *
  * @retval EMBENET_RADIO_STATUS_SUCCESS on success
- * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR on error
+ * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR if the radio hardware does not respond
  */
 EMBENET_RADIO_Status EMBENET_RADIO_TxNow(void);
 
 /**
- * @brief Wakes transceiver from IDLE state.
- *        Prepares transceiver for listening state.
- * @param[in] channel - Channel number.
- * @retval EMBENET_RADIO_STATUS_SUCCESS if no error occurred
- * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR if radio is not responding
- * @retval EMBENET_RADIO_STATUS_WRONG_STATE if function called in wrong state of radio
+ * @brief Wakes the transceiver from IDLE and prepares it for reception.
+ *
+ * Transitions the radio from IDLE to RX_READY.
+ *
+ * @param[in] channel radio channel to listen on
+ *
+ * @retval EMBENET_RADIO_STATUS_SUCCESS on success
+ * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR if the radio hardware does not respond
+ * @retval EMBENET_RADIO_STATUS_WRONG_STATE if the radio is not in a state that allows this transition
  */
 EMBENET_RADIO_Status EMBENET_RADIO_RxEnable(EMBENET_RADIO_Channel channel);
 
 /**
- * @brief Triggers listening state.
- * @retval EMBENET_RADIO_STATUS_SUCCESS if no error occurred
- * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR if radio is not responding
+ * @brief Triggers immediate listening.
+ *
+ * Transitions the radio from RX_READY to LISTEN.
+ *
+ * @retval EMBENET_RADIO_STATUS_SUCCESS on success
+ * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR if the radio hardware does not respond
  */
 EMBENET_RADIO_Status EMBENET_RADIO_RxNow(void);
 
 /**
- * @brief Gets received frame.
- * @note Should be called after onEndFrame occurs.
+ * @brief Copies the last received frame into the caller-supplied buffer.
  *
- * @param[out] buffer - data storage buffer pointer.
- * @param[out] bufferLength
- * @return @ref EMBENET_RADIO_RxInfo
+ * Must be called after the @c onEndFrame callback fires. Up to @p bufferLength bytes are written into @p buffer.
+ * The @ref EMBENET_RADIO_RxInfo::mpduLength field in the returned structure reflects the number of bytes actually
+ * written (clamped to @p bufferLength). If the received frame was longer than @p bufferLength, @ref EMBENET_RADIO_RxInfo::crcValid
+ * is set to false.
+ *
+ * @param[out] buffer       destination buffer; must not be NULL
+ * @param[in]  bufferLength size of @p buffer in bytes; should be at least EMBENET_RADIO_MAX_PSDU_LENGTH to avoid truncation
+ *
+ * @return @ref EMBENET_RADIO_RxInfo describing the received frame.
  */
 EMBENET_RADIO_RxInfo EMBENET_RADIO_GetReceivedFrame(uint8_t *buffer, size_t bufferLength);
 
 /**
- * @brief Gets radio timings.
- * @note Returned values are evaluated empirically.
+ * @brief Returns the radio timing and capability parameters for this port implementation.
  *
- * @return radio timings @ref EMBENET_RADIO_Capabilities.
+ * @note Values are determined empirically by the port implementor and must be worst-case upper bounds.
+ *
+ * @return Pointer to a @ref EMBENET_RADIO_Capabilities structure; never NULL. The pointed-to data is valid for the lifetime of the application.
  */
 EMBENET_RADIO_Capabilities const *EMBENET_RADIO_GetCapabilities(void);
 
 /**
- * @brief Starts continuous transmission.
- * @param[in] mode Continuous TX mode
- * @param[in] channel TX channel
- * @param[in] txp TX power in dBm
+ * @brief Starts continuous transmission for radio testing purposes.
+ *
+ * @param[in] mode    continuous TX mode (PN9 sequence or unmodulated carrier)
+ * @param[in] channel radio channel to transmit on
+ * @param[in] txp     transmit power in dBm
+ *
  * @retval EMBENET_RADIO_STATUS_SUCCESS on success
- * @retval EMBENET_RADIO_STATUS_PARAMETER_ARGS_OUT_OF_BOUNDS when psduLen < EMBENET_RADIO_MIN_PSDU_LENGTH or psduLen > EMBENET_RADIO_MAX_PSDU_LENGTH
- * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR on error
+ * @retval EMBENET_RADIO_STATUS_COMMUNICATION_ERROR if the radio hardware does not respond
  */
 EMBENET_RADIO_Status EMBENET_RADIO_StartContinuousTx(EMBENET_RADIO_ContinuousTxMode mode, EMBENET_RADIO_Channel channel, EMBENET_RADIO_Power txp);
 

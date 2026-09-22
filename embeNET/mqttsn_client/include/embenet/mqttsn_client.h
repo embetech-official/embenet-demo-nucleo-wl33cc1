@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   Commercial
  * @copyright Embetech sp. z o.o.
- * @version   1.0.1
+ * @version   1.2.5
  * @purpose   embeNET MQTT-SN client
  * @brief     MQTT-SN client API
  *
@@ -84,7 +84,9 @@ typedef enum {
   /// Indicates that the operation failed because the requested topic name is too long
   MQTTSN_CLIENT_RESULT_TOPIC_TOO_LONG,
   /// Indicates that the operation failed because the requested message is too long
-  MQTTSN_CLIENT_RESULT_MESSAGE_TOO_LONG
+  MQTTSN_CLIENT_RESULT_MESSAGE_TOO_LONG,
+  /// Indicates that the operation failed because the client is busy processing another request
+  MQTTSN_CLIENT_RESULT_BUSY
 } MQTTSNClientResult;
 
 /// Possible levels of QoS
@@ -116,7 +118,7 @@ typedef enum {
 /// Maximum number of topics that the client can publish to
 #define MQTTSN_CLIENT_MAX_TOPICS_TO_PUBLISH 10
 /// Maximum number of consecutive PINGRESP messages that can be lost before the client assumes the gateway is not responding
-#define MQTTSN_CLIENT_MAX_PINGRESP_LOST 3
+#define MQTTSN_CLIENT_MAX_PINGRESP_LOST 2
 
 /// Type describing topic id
 typedef uint16_t MQTTSNTopicId;
@@ -308,15 +310,11 @@ typedef struct MQTTSNClient {
   uint8_t expectedMessageType;
   /** Time (in milliseconds) after which the gateway assumes the client is disconnected, if no message from client in that time is received.
       Thus this is the minimum time between messages sent from the client. When no user messages are sent, PING should be sent instead.*/
-  uint32_t keepAliveTimeMs;
+  uint32_t pingDelayMs;
   /// Gateway response timeout in milliseconds, after which the client assumes the gateway is not responding
   uint32_t gatewayTimeoutMs;
   /// Number of consecutive PINGRESP messages that were lost
   uint8_t pingRespLost;
-  /// Last time the client received packet from server
-  uint64_t lastPacketReceptionTime;
-  /// Last time at which the client sent packet to server
-  uint64_t lastPacketSendTime;
   /// Sequential packet counter (note that 0 is forbidden)
   uint16_t packetId;
   /// Max number of Qos retransmissions
@@ -329,12 +327,13 @@ typedef struct MQTTSNClient {
   MQTTSNTopicDescriptor subscribeTopics[MQTTSN_CLIENT_MAX_TOPICS_TO_SUBSCRIBE];
   /// Array of topics that the client registered to publish to
   MQTTSNTopicDescriptor publishTopics[MQTTSN_CLIENT_MAX_TOPICS_TO_PUBLISH];
-  /// MQTT-SN client session flags (options)
-  MQTTSNSessionFlags flags;
+
   /// UDP socket descriptor
   EMBENET_UDP_SocketDescriptor udpSocket;
   /// Definition of callback handlers on client events
   MQTTSNClientEventHandlers eventHandlers;
+  /// User defined context
+  void *context;
 } MQTTSNClient;
 
 /**
@@ -358,9 +357,9 @@ typedef struct MQTTSNClient {
 MQTTSNClientResult MQTTSN_CLIENT_Init(MQTTSNClient *client, uint16_t port, char const *clientId, MQTTSNClientEventHandlers const *eventHandlers);
 
 /**
- * @brief Deinitializes the MQTT-SN client.
+ * @brief Deinitialize the MQTT-SN client.
  *
- * This function deinitializes the MQTTSNClient, closing the UDP socket (if open) and destroying all internal tasks.
+ * This function deinitialize the MQTTSNClient, closing the UDP socket (if open) and destroying all internal tasks.
  *
  * @param[in] client pointer to the MQTT-SN client description structure
  */
@@ -377,8 +376,10 @@ void MQTTSN_CLIENT_Deinit(MQTTSNClient *client);
  * @param[in] client pointer to the MQTT-SN client description structure
  * @param[in] gatewayAddress IPv6 address of the MQTT Gateway
  * @param[in] gatewayPort UDP port number of the MQTT Gateway
- * @param[in] keepAliveTimeMs time (in milliseconds) after which the gateway assumes the client is disconnected, if no message from client in that
- * time is received. In case there are no user generated messages produced, the client will send PING message automatically.
+ * @param[in] keepAliveTimeMs time (in milliseconds) after the miltiply of 1.5 of which the gateway assumes the client is disconnected, if no
+ * message from client in that time is received. In case there are no user generated messages produced with QoS > 0, the client will send PING
+ * message automatically with period (keepAliveTimeMs * 3 / 2 - gatewayTimeoutMs) / MQTTSN_CLIENT_MAX_PINGRESP_LOST. Therefore keepAliveTimeMs
+ * must be larger than gatewayTimeoutMs.
  * @param[in] gatewayTimeoutMs gateway response timeout (in milliseconds), after which the client assumes the gateway is not responding
  * @param[in] willTopic topic to which the will message shall be published if gateway deems the client lost. Nullable if will is not used.
  * @param[in] willMsg message that shall be published as the last will if gateway deems the client lost. Nullable if will is not used.
@@ -390,6 +391,11 @@ void MQTTSN_CLIENT_Deinit(MQTTSNClient *client);
  * @retval MQTTSN_CLIENT_RESULT_FAILED_TO_REGISTER_UDP_SOCKET if the UDP socket could not be opened
  * @retval MQTTSN_CLIENT_RESULT_FAILED_TO_SERIALIZE_PACKET if the connection request could not be serialized
  * @retval MQTTSN_CLIENT_RESULT_FAILED_TO_SEND_PACKET if the connection request could not be sent via UDP socket
+ *
+ * @note REGARDS HiveMQ-edge. Gateway will not respond to CONNECT packet if there is already an active session with the same client id.
+ * Only after 1.5 times the keep alive time without any messages from the client, the gateway will assume the client is lost and close the session.
+ * BUT CONNECT is also counted as a message from the client, so if the client sends CONNECT packets too often, the gateway will never close the
+ * previous session.
  */
 MQTTSNClientResult MQTTSN_CLIENT_Connect(MQTTSNClient *client, EMBENET_IPV6 const *gatewayAddress, uint16_t gatewayPort, uint32_t keepAliveTimeMs,
                                          uint32_t gatewayTimeoutMs, char const *willTopic, uint8_t const *willMsg, uint8_t const qosRetransmissions);
@@ -441,7 +447,6 @@ MQTTSNTopicId MQTTSN_CLIENT_GetTopicId(MQTTSNClient *client, char const *topic);
  * @brief Publishes a message on a topic given the topic string.
  *
  * Publishes a message using PUBLISH packet to a provided topic.
- * Currently only supports QoS0
  *
  * @param[in] client pointer to the MQTT-SN client description structure
  * @param[in] topic string containing regular topic name
@@ -465,7 +470,6 @@ MQTTSNClientResult MQTTSN_CLIENT_PublishMessage(MQTTSNClient *client, char const
  * @brief Publishes a message on a topic given the topic id.
  *
  * Publishes a message using PUBLISH packet to a provided topic.
- * Currently only supports QoS0
  *
  * @param[in] client pointer to the MQTT-SN client description structure
  * @param[in] topicId id of a target topic
@@ -526,6 +530,29 @@ MQTTSNClientResult MQTTSN_CLIENT_Subscribe(MQTTSNClient *client, char const *top
  * @retval MQTTSN_CLIENT_RESULT_FAILED_TO_SEND_PACKET if the unsubscribe request could not be sent via UDP socket
  */
 MQTTSNClientResult MQTTSN_CLIENT_Unsubscribe(MQTTSNClient *client, char const *topic, MQTTSNOnTopicUnsubscribedByClient onTopicUnsubscribedByClient);
+
+/**
+ * @brief Adds a general purpose context to the MQTT-SN client.
+ *
+ * This function allows to attach a general purpose context to the MQTT-SN client.
+ * The context can be later retrieved using @ref MQTTSN_CLIENT_GetContext.
+ * This can be handy to attach additional user data to the client, that can be later retrieved in the event handling callbacks.
+ */
+MQTTSNClientResult MQTTSN_CLIENT_SetContext(MQTTSNClient *client, void *context);
+
+/**
+ * @brief Retrieves a general purpose context attached to the MQTT-SN client.
+ *
+ * This function allows to retrieve a general purpose context attached to the MQTT-SN client using @ref MQTTSN_CLIENT_SetContext.
+ */
+void *MQTTSN_CLIENT_GetContext(MQTTSNClient const *client);
+
+/**
+ * Returns the version string of the MQTTSN client.
+ *
+ * @return char const*
+ */
+char const *MQTTSN_CLIENT_GetVersionString(void);
 
 /** @} */
 

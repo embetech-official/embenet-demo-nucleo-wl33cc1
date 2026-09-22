@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.0.4
+ * @version   1.1.1
  * @purpose   embeNET API
  * @brief     embeNET Node API
  *
@@ -19,18 +19,18 @@
 #ifndef EMBENET_NODE_H_
 #define EMBENET_NODE_H_
 
-#include "node_defs.h"
-#include "node_event_handlers.h"
+#include <embenet/node_defs.h>
+#include <embenet/node_event_handlers.h>
 #include <embenet/udp.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdalign.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * @addtogroup embenet_node_api embeNET Node API
@@ -52,6 +52,7 @@ extern "C" {
  * @ref EMBENET_NODE_SetUID                 | Sets own unique identifier.
  * @ref EMBENET_NODE_GetBorderRouterAddress | Gets the IPv6 address of the border router.
  * @ref EMBENET_NODE_GetParentAddress       | Gets the IPv6 link-local address of the parent node.
+ * @ref EMBENET_NODE_GetOwnAddress          | Gets the IPv6 unicast address of the own node.
  * @ref EMBENET_NODE_ForceParentChange      | Forces parent change.
  * @ref EMBENET_NODE_RootStart              | Starts operation as a root node.
  *
@@ -157,6 +158,7 @@ extern "C" {
  * - @ref EMBENET_NODE_SetUID - @ref UNINITIALIZED
  * - @ref EMBENET_NODE_GetBorderRouterAddress - @ref JOINED
  * - @ref EMBENET_NODE_GetParentAddress - @ref JOINED
+ * - @ref EMBENET_NODE_GetOwnAddress - @ref JOINED
  * - @ref EMBENET_NODE_ForceParentChange - @ref JOINED
  * - @ref EMBENET_NODE_RootStart - @ref INITIALIZED
  * - @ref EMBENET_NODE_JoinGroup - @ref INITIALIZED, @ref JOINING, @ref SYNCHRONIZED, @ref JOINED
@@ -211,14 +213,16 @@ typedef void (*EMBENET_NODE_TaskFunction)(EMBENET_TaskId taskId, EMBENET_NODE_Ti
  *
  * This function initializes the embeNET networking stack in the node. It reserves and initializes the resources needed for the stack operation.
  * It also initializes the underlying port (hardware).
- * This call starts the local clock in node so that the time returned through a call to @ref EMBENET_NODE_GetLocalTime starts to flow.
+ * This call starts the local clock in the node so that the time returned through a call to @ref EMBENET_NODE_GetLocalTime starts to flow.
  *
  * After initialization @ref EMBENET_NODE_Proc should be called periodically.
- * Must be called before any API function is called, except of @ref EMBENET_NODE_SetUID and @ref EMBENET_NODE_Deinit.
+ * Must be called before any other API function, except @ref EMBENET_NODE_SetUID and @ref EMBENET_NODE_GetVersion.
  *
- * @note For more information refer to @ref embenet_node_stack_handling
+ * @note For more information refer to @ref embenet_node_stack_handling.
  *
- * @param[in] eventHandlers structure, desired handlers may be set
+ * @param[in] eventHandlers pointer to the event handler structure; all desired handlers must be set before calling this function.
+ *                          The pointed-to structure must remain valid until @ref EMBENET_NODE_Deinit is called.
+ *                          May be NULL if no event handlers are needed.
  *
  * @retval EMBENET_RESULT_OK if initialization completed successfully
  * @retval EMBENET_RESULT_INVALID_ARGUMENT if at least one of the input arguments was invalid
@@ -229,12 +233,11 @@ EMBENET_Result EMBENET_NODE_Init(EMBENET_NODE_EventHandlers const *eventHandlers
  * @brief Deinitializes the embeNET networking stack.
  *
  * This function deinitializes the embeNET networking stack. Once called, all activities within the stack are stopped and all dynamically
- * allocated resources (if any) are freed. In order to use the stack again, one must call @ref EMBENET_NODE_Init.
+ * allocated resources (if any) are freed. In order to use the stack again, @ref EMBENET_NODE_Init must be called.
  *
- * @note If the stack is operational, such as a node is being joined or performing any other operation, calling the @ref EMBENET_NODE_Deinit function
- * immediately terminates all these operations.
- * @note For more information refer to @ref embenet_node_stack_handling
- *
+ * @note If the stack is operational (e.g. a node is joining or performing any other operation), calling this function immediately terminates
+ *       all those operations.
+ * @note For more information refer to @ref embenet_node_stack_handling.
  */
 void EMBENET_NODE_Deinit(void);
 
@@ -244,26 +247,26 @@ void EMBENET_NODE_Deinit(void);
  * This function should be called periodically within the main loop of a program (or a thread) after a call to @ref EMBENET_NODE_Init.
  * It advances the networking process that is running in the stack which is responsible for all networking activities.
  * In particular, many event callbacks registered in the stack are called from within the context of this function.
- * This function performs time-invariant operations that may be processed in non-ISR, non-privileged MCU routine.
+ * This function performs time-invariant operations that may be processed in a non-ISR, non-privileged MCU routine.
  *
- * For more information refer to @ref embenet_node_stack_handling
+ * @note For more information refer to @ref embenet_node_stack_handling.
  *
  * @warning Aborts when called on an uninitialized stack.
  */
 void EMBENET_NODE_Proc(void);
 
 /**
- * Starts the network joining process as a node.
+ * @brief Starts the network joining process as a node.
  *
- * This functions starts the process of joining the node to the network. To join the network the application must provide the
+ * This function starts the process of joining the node to the network. To join the network the application must provide the
  * configuration structure (see @ref EMBENET_NODE_JoinConfig) containing:
  * - k1 - common network key
  * - psk - pre-shared device-specific key
  *
- * @note For more information on joining the network refer to @ref embenet_node_network_handling
+ * @note For more information on joining the network refer to @ref embenet_node_network_handling.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] config network configuration (see @ref EMBENET_NODE_JoinConfig)
+ * @param[in] config pointer to the network configuration structure; must not be NULL.
  *
  * @retval EMBENET_RESULT_OK if the joining process has begun successfully
  * @retval EMBENET_RESULT_WRONG_STATE if not called in @ref INITIALIZED state
@@ -272,15 +275,15 @@ void EMBENET_NODE_Proc(void);
 EMBENET_Result EMBENET_NODE_Join(EMBENET_NODE_JoinConfig const *config);
 
 /**
- * @brief Starts the network joining process as a node using a previously stored @ref EMBENET_NODE_QuickJoinCredentials for quicker join.
+ * @brief Starts the network joining process as a node using previously stored @ref EMBENET_NODE_QuickJoinCredentials for a quicker join.
  *
- * This functions starts the process of joining the node to the network using the credentials (@ref EMBENET_NODE_QuickJoinCredentials),
- * that were established during the previous join. Re-using these credentials allows the node to speed up the joining process.
+ * This function starts the process of joining the node to the network using the credentials (@ref EMBENET_NODE_QuickJoinCredentials)
+ * established during the previous join. Re-using these credentials allows the node to speed up the joining process.
  *
- * @note For more information on joining the network refer to @ref embenet_node_network_handling and specifically: @ref
- * embenet_node_network_quick_join
+ * @note For more information on joining the network refer to @ref embenet_node_network_handling and specifically @ref
+ * embenet_node_network_quick_join.
  *
- * @param[in] quickJoinCredentials credentials returned by the @ref EMBENET_NODE_OnJoined callback
+ * @param[in] quickJoinCredentials pointer to the credentials returned by the @ref EMBENET_NODE_OnJoined callback; must not be NULL.
  *
  * @retval EMBENET_RESULT_OK if the quick joining process has begun successfully
  * @retval EMBENET_RESULT_WRONG_STATE if not called in @ref INITIALIZED state
@@ -290,45 +293,38 @@ EMBENET_Result EMBENET_NODE_Join(EMBENET_NODE_JoinConfig const *config);
 EMBENET_Result EMBENET_NODE_QuickJoin(EMBENET_NODE_QuickJoinCredentials const *quickJoinCredentials);
 
 /**
- * Disconnects the node from the network.
+ * @brief Disconnects the node from the network.
  *
- * This function causes the node to go back to the initialized state, stopping all network activity.
- * If the node was joined to the network then all the tasks that were scheduled in network time get canceled.
- * This call can also be used to stop the on-going joining process.
+ * This function causes the node to go back to the @ref INITIALIZED state, stopping all network activity.
+ * If the node was joined to the network, all tasks scheduled in network time are canceled.
+ * This call can also be used to stop an ongoing joining process.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
  * @retval EMBENET_RESULT_OK if the leave process was triggered successfully
- * @retval EMBENET_RESULT_WRONG_STATE if node is not in @ref JOINING, @ref SYNCHRONIZED or @ref JOINED state
+ * @retval EMBENET_RESULT_WRONG_STATE if the node is not in @ref JOINING, @ref SYNCHRONIZED or @ref JOINED state
  */
 EMBENET_Result EMBENET_NODE_Leave(void);
 
 /**
- * Starts operation as a root node.
+ * @brief Starts operation as a root node.
  *
  * This function causes the node to act as a root node in the network. Once started, such a node is controlled
  * exclusively by an external entity called border router.
  *
  * During network formation and operation the root node can broadcast additional data to all nodes wishing to join the network.
- * This data can be set using the panData and panDataSize arguments. This data is available in the joining nodes through the
- * @ref EMBENET_NODE_OnJoinAttempt event handler.
- *
- * This call is only available if the embeNET Node library was build with ROOT_CAPABILITIES enabled
+ * This data is set by the border router and is available in joining nodes through the @ref EMBENET_NODE_OnJoinAttempt event handler.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] panData additional network-wide data to pass to each node wishing to join. The network is capable of sending max. 16 Bytes od PAN data
- * @param[in] panDataSize size of the additional network-wide data.
- *
  * @retval EMBENET_RESULT_OK if the root operation has started successfully
- * @retval EMBENET_RESULT_WRONG_STATE if node is not in @ref INITIALIZED
- * @retval EMBENET_RESULT_INVALID_ARGUMENT if at least one of the input arguments was invalid
- * @retval EMBENET_RESULT_ROOT_CAPABILITIES_DISABLED if the library was built without support for root capabilities
+ * @retval EMBENET_RESULT_WRONG_STATE if the node is not in @ref INITIALIZED state
+ * @retval EMBENET_RESULT_ROOT_CAPABILITIES_DISABLED if root capabilities were not built in
  */
-EMBENET_Result EMBENET_NODE_RootStart(void const *panData, size_t panDataSize);
+EMBENET_Result EMBENET_NODE_RootStart(void);
 
 /**
- * Makes the node join the given multicast group.
+ * @brief Makes the node join the given multicast group.
  *
  * The node can belong to many multicast groups. This call is used to join the group with a specific group identifier.
  *
@@ -337,12 +333,12 @@ EMBENET_Result EMBENET_NODE_RootStart(void const *panData, size_t panDataSize);
  * @param[in] groupId identifier of the group that the node should join
  *
  * @retval true if the node successfully joined the group
- * @retval false otherwise
+ * @retval false if the group could not be joined (e.g. the group registry is full)
  */
 bool EMBENET_NODE_JoinGroup(EMBENET_GroupId groupId);
 
 /**
- * Makes the node leave the given multicast group.
+ * @brief Makes the node leave the given multicast group.
  *
  * The node can belong to many multicast groups. This call is used to leave the group with a specific group identifier.
  *
@@ -351,213 +347,240 @@ bool EMBENET_NODE_JoinGroup(EMBENET_GroupId groupId);
  * @param[in] groupId identifier of the group that the node should leave
  *
  * @retval true if the node successfully left the group
- * @retval false otherwise
+ * @retval false if the group was not found in the node's group registry
  */
 bool EMBENET_NODE_LeaveGroup(EMBENET_GroupId groupId);
 
 /**
- * Gets the number of groups the node belongs to.
+ * @brief Gets the number of groups the node belongs to.
  *
- * The node can belong to many multicast groups. Each time the @ref EMBENET_NODE_JoinGroup or @ref EMBENET_NODE_JoinGroup
+ * The node can belong to many multicast groups. Each time @ref EMBENET_NODE_JoinGroup or @ref EMBENET_NODE_LeaveGroup
  * is called, the number of groups the node belongs to may change. This call allows to get the current number of groups
- * the node belongs to. After that the user code may poll each group using the @ref EMBENET_NODE_GetGroupByIndex
+ * the node belongs to. The individual groups can then be enumerated using @ref EMBENET_NODE_GetGroupByIndex.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return current number of groups the node belongs to
+ * @return Current number of groups the node belongs to.
  */
 size_t EMBENET_NODE_GetGroupCount(void);
 
 /**
- * Gets the groups the node belongs to by their index.
+ * @brief Gets the group identifier the node belongs to, by index.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] index group index ranging from 0 to @ref EMBENET_NODE_GetGroupCount - 1
+ * @param[in] index group index in the range [0, @ref EMBENET_NODE_GetGroupCount() - 1]
  *
- * @return group identifier or @ref EMBENET_GROUPID_INVALID if the index is outside the valid range
+ * @return Group identifier, or `EMBENET_GROUPID_INVALID` if the index is outside the valid range.
  */
 EMBENET_GroupId EMBENET_NODE_GetGroupByIndex(size_t index);
 
 /**
- * Registers an application-level task.
+ * @brief Registers an application-level task.
  *
  * This function registers a new application-level task within the networking stack.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] taskFunction pointer to a function that will be run as a task
- * @param[in] userContext optional context that will be passed to the taskFunction once it is called
+ * @param[in] taskFunction pointer to the function that will be run as the task; must not be NULL.
+ * @param[in] userContext optional context pointer that will be passed to @p taskFunction when it is called; may be NULL.
  *
- * @return task identifier or EMBENET_TASKID_INVALID if the task has not been created
+ * @return Task identifier that can be used in subsequent calls to @ref EMBENET_NODE_TaskSchedule, @ref EMBENET_NODE_TaskCancel
+ *         and @ref EMBENET_NODE_TaskDestroy, or @ref EMBENET_TASKID_INVALID if the task could not be created
+ *         (e.g. the maximum number of tasks has been reached).
  */
 EMBENET_TaskId EMBENET_NODE_TaskCreate(EMBENET_NODE_TaskFunction taskFunction, void *userContext);
 
 /**
- * Destroys a task.
+ * @brief Destroys a previously created task.
+ *
+ * If the task is currently scheduled, it is canceled before being destroyed.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] taskId task identifier (as returned by @ref EMBENET_NODE_TaskCreate)
- * @retval EMBENET_RESULT_OK if destroyed properly.
- * @retval EMBENET_RESULT_UNSPECIFIED_ERROR otherwise
+ * @param[in] taskId task identifier as returned by @ref EMBENET_NODE_TaskCreate
+ *
+ * @retval EMBENET_RESULT_OK if the task was destroyed successfully
+ * @retval EMBENET_RESULT_INVALID_ARGUMENT if @p taskId does not refer to a valid task
  */
 EMBENET_Result EMBENET_NODE_TaskDestroy(EMBENET_TaskId taskId);
 
 /**
- * Schedules task in time, reschedules if task was already scheduled.
+ * @brief Schedules a task at the given time, or reschedules it if already scheduled.
  *
- * @note If called more than once before the task is executed, task is rescheduled according to latest applied values.
+ * @note If called more than once before the task executes, the task is rescheduled to the latest provided time.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] taskId task identifier (as returned by @ref EMBENET_NODE_TaskCreate)
+ * @param[in] taskId task identifier as returned by @ref EMBENET_NODE_TaskCreate
  * @param[in] timeSource time source for the scheduled task
- * @param[in] t time expressed in ms
+ * @param[in] t absolute time at which the task should run, expressed in milliseconds
  *
- * @retval EMBENET_RESULT_OK if scheduled properly.
+ * @retval EMBENET_RESULT_OK if the task was scheduled successfully
  * @retval EMBENET_RESULT_INVALID_ARGUMENT if at least one of the input arguments was invalid
- * @retval EMBENET_RESULT_UNABLE_TO_SCHEDULE_IN_THE_PAST if the schedule time is in the past
- * @retval EMBENET_RESULT_NOT_SYNCHRONIZED if schedule was requested in network time but the node is not synchronized to the network
+ * @retval EMBENET_RESULT_UNABLE_TO_SCHEDULE_IN_THE_PAST if the requested time is in the past
+ * @retval EMBENET_RESULT_NOT_SYNCHRONIZED if @ref EMBENET_NODE_TIME_SOURCE_NETWORK was requested but the node is not synchronized to the network
  */
 EMBENET_Result EMBENET_NODE_TaskSchedule(EMBENET_TaskId taskId, EMBENET_NODE_TimeSource timeSource, uint64_t t);
 
 /**
- * Cancels the previously scheduled task.
+ * @brief Cancels a previously scheduled task.
  *
- * @note May be safely called even when task was not scheduled. In such case there is no effect.
+ * @note Safe to call even when the task is not currently scheduled; in that case there is no effect.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] taskId task identifier (as returned by @ref EMBENET_NODE_TaskCreate)
+ * @param[in] taskId task identifier as returned by @ref EMBENET_NODE_TaskCreate
  *
- * @retval EMBENET_RESULT_OK if the task canceled properly
- * @retval EMBENET_RESULT_INVALID_ARGUMENT if at least one of the input arguments was invalid
+ * @retval EMBENET_RESULT_OK if the task was canceled successfully or was not scheduled
+ * @retval EMBENET_RESULT_INVALID_ARGUMENT if @p taskId does not refer to a valid task
  */
 EMBENET_Result EMBENET_NODE_TaskCancel(EMBENET_TaskId taskId);
 
 /**
- * Gets own UID which is an EUI64 address.
+ * @brief Gets own UID which is an EUI-64 address.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @returns UID or @ref EMBENET_EUI64_INVALID if the UID was not set neither by the underlying hardware nor by the user
+ * @return UID of the node, or `EMBENET_EUI64_INVALID` if the UID was not set by the underlying hardware nor by the user.
  */
 EMBENET_EUI64 EMBENET_NODE_GetUID(void);
 
 /**
- * Sets own UID which is an EUI64 address.
+ * @brief Sets own UID which is an EUI-64 address.
  *
- * This function sets the UID which is used to identify the node in the network.
- * In most cases calling this function directly from application code is not needed, as the UID of the node is normally taken
- * form the underlying hardware platform.
+ * This function sets the UID used to identify the node in the network.
+ * In most cases calling this function directly is not needed, as the UID is normally taken from the underlying hardware platform.
  *
- * @note In rare cases however the application may want to control how the UIDs are generated. In such scenarios extreme care should be taken to
- * ensure that the UIDs in nodes are truly unique across all available inventory.
- * @warning This function must be called right after initialization (@ref EMBENET_NODE_Init).
- *
+ * @note In rare cases the application may want to control how UIDs are generated. In such scenarios extreme care must be taken to
+ *       ensure that UIDs are truly unique across all nodes in the deployment.
+ * @warning Must be called after @ref EMBENET_NODE_Init and before @ref EMBENET_NODE_Join or @ref EMBENET_NODE_RootStart.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @retval EMBENET_RESULT_OK if the UID was properly set
- * @retval EMBENET_RESULT_WRONG_STATE if node is not in @ref INITIALIZED state
+ * @param[in] uid the EUI-64 address to assign to this node
+ *
+ * @retval EMBENET_RESULT_OK if the UID was set successfully
+ * @retval EMBENET_RESULT_WRONG_STATE if the node is not in @ref INITIALIZED state
  */
 EMBENET_Result EMBENET_NODE_SetUID(EMBENET_EUI64 uid);
 
 /**
- * @brief Forces parent change.
+ * @brief Forces a parent change.
  *
- * This function should be used when QoS highly outreaches the expected level. Eg. when multicast traffic does not work despite all other
- * services works properly.
+ * This function should be used when QoS significantly exceeds the expected level, e.g. when multicast traffic does not work
+ * despite all other services operating correctly.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @retval EMBENET_RESULT_OK if the parent change procedure was started
- * @retval EMBENET_RESULT_WRONG_STATE if node is not in @ref JOINED state
+ * @retval EMBENET_RESULT_OK if the parent change procedure was started successfully
+ * @retval EMBENET_RESULT_WRONG_STATE if the node is not in @ref JOINED state
  */
 EMBENET_Result EMBENET_NODE_ForceParentChange(void);
 
 /**
- * Gets the IPv6 address of the border router, if it is reachable.
+ * @brief Gets the IPv6 address of the border router, if reachable.
  *
- * This function gets the IPv6 address of the border router that started the network that the node has joined.
+ * This function gets the IPv6 address of the border router that started the network the node has joined.
  *
- * @note In vast majority of cases the border router address becomes valid immediately after join.
+ * @note In the vast majority of cases the border router address becomes valid immediately after joining.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[out] ipv6 pointer the location where the IPv6 address will be stored, must not be NULL.
+ * @param[out] ipv6 pointer to the location where the IPv6 address will be stored; must not be NULL.
  *
  * @retval EMBENET_RESULT_OK if the border router IPv6 address was stored successfully
- * @retval EMBENET_RESULT_WRONG_STATE if node is not in @ref JOINED state
- * @retval EMBENET_RESULT_INVALID_ARGUMENT if at least one of the input arguments was invalid
- * @retval EMBENET_RESULT_UNSPECIFIED_ERROR if the IPv6 was not stored
+ * @retval EMBENET_RESULT_WRONG_STATE if the node is not in @ref JOINED state
+ * @retval EMBENET_RESULT_INVALID_ARGUMENT if @p ipv6 is NULL
+ * @retval EMBENET_RESULT_UNSPECIFIED_ERROR if the border router address is not yet available
  */
 EMBENET_Result EMBENET_NODE_GetBorderRouterAddress(EMBENET_IPV6 *ipv6);
 
 /**
- * Gets the link-local IPv6 address of the parent node.
+ * @brief Gets the link-local IPv6 address of the parent node.
  *
- * @note In vast majority of cases the parent address will be valid after node joins network. Parent address may change over time.
+ * @note In the vast majority of cases the parent address is valid immediately after joining. The parent address may change over time.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[out] ipv6 pointer the location where the IPv6 address will be stored, must not be NULL.
+ * @param[out] ipv6 pointer to the location where the IPv6 address will be stored; must not be NULL.
  *
- * @retval EMBENET_RESULT_OK if parent's IPv6 address was stored successfully
- * @retval EMBENET_RESULT_WRONG_STATE if node is not in @ref JOINED state
- * @retval EMBENET_RESULT_INVALID_ARGUMENT if at least one of the input arguments was invalid
- * @retval EMBENET_RESULT_UNSPECIFIED_ERROR if the IPv6 was not stored
+ * @retval EMBENET_RESULT_OK if the parent IPv6 address was stored successfully
+ * @retval EMBENET_RESULT_WRONG_STATE if the node is not in @ref JOINED state
+ * @retval EMBENET_RESULT_INVALID_ARGUMENT if @p ipv6 is NULL
+ * @retval EMBENET_RESULT_UNSPECIFIED_ERROR if the parent address is not available
  */
 EMBENET_Result EMBENET_NODE_GetParentAddress(EMBENET_IPV6 *ipv6);
 
 /**
- * Gets the current local time since the networking stack was initialized.
+ * @brief Gets the node's own unicast IPv6 address.
  *
- * @note This function returns the value of a monotonic clock, that is started from value 0 when @ref EMBENET_NODE_Init is called.
- * @note The clock is stopped when EMBENET_NODE_Deinit is invoked.
- * @note The clock measures time in milliseconds. It is a local node clock and it is NOT synchronized with other nodes in the network.
- * @note By using a 64-bit value range it is assumed, that the time overflow should not be concerned.
+ * @note This address is valid only after the node has joined the network, as it is formed from the network prefix and the node's UID.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return Local time expressed in ms.
+ * @param[out] ipv6 pointer to the location where the IPv6 address will be stored; must not be NULL.
+ *
+ * @retval EMBENET_RESULT_OK if the own IPv6 address was stored successfully
+ * @retval EMBENET_RESULT_WRONG_STATE if the node is not in @ref JOINED state
+ * @retval EMBENET_RESULT_INVALID_ARGUMENT if @p ipv6 is NULL
+ */
+EMBENET_Result EMBENET_NODE_GetOwnAddress(EMBENET_IPV6 *ipv6);
+
+/**
+ * @brief Gets the current local time since the networking stack was initialized.
+ *
+ * @note Returns a monotonic clock value that starts at 0 when @ref EMBENET_NODE_Init is called and stops when @ref EMBENET_NODE_Deinit is called.
+ * @note The clock is local to this node and is NOT synchronized with other nodes in the network.
+ * @note The 64-bit range is large enough that overflow need not be considered in practice.
+ * @warning Aborts when called on an uninitialized stack.
+ *
+ * @return Local time expressed in milliseconds.
  */
 uint64_t EMBENET_NODE_GetLocalTime(void);
 
 /**
- * Gets the current network time.
+ * @brief Gets the current network time.
  *
- * @note This time has no particular start point and may begin from a very large value.
- * @note Network time is a current duration since ASN no 0. Every EmbeNET node holds the same time notion.
+ * @note Network time is the elapsed duration since ASN 0, shared by all nodes in the network. It has no fixed epoch and may start at a large value.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return Time expressed in ms. 0 if not in @ref SYNCHRONIZED or @ref JOINED state.
+ * @return Network time expressed in milliseconds, or 0 if the node is not in @ref SYNCHRONIZED or @ref JOINED state.
  */
 uint64_t EMBENET_NODE_GetNetworkTime(void);
 
 /**
- * Gets the current network time expressed in Absolute Slot Number.
+ * @brief Gets the current network time expressed as an Absolute Slot Number (ASN).
  *
- * @note This time has no particular start point and may begin from a very large value.
+ * @note The ASN has no fixed start point and may begin at a large value.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return Time expressed in ASN. 0 if not in @ref SYNCHRONIZED or @ref JOINED state.
+ * @return Current ASN, or 0 if the node is not in @ref SYNCHRONIZED or @ref JOINED state.
  */
 uint64_t EMBENET_NODE_GetNetworkAsn(void);
 
 /**
- * Gets a random unsigned integer value from a given range.
+ * @brief Gets a random unsigned integer value from a given inclusive range.
  *
- * @note The value of stop must be greater or equal the value of start.
+ * @warning @p stop must be greater than or equal to @p start; violating this aborts the stack.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] start lowest number in the range
- * @param[in] stop highest number in the range
- * @return random unsigned integer value in the range of start to stop
+ * @param[in] start lowest value in the range (inclusive)
+ * @param[in] stop highest value in the range (inclusive)
+ *
+ * @return Random value in the range [@p start, @p stop].
  */
 uint32_t EMBENET_NODE_GetRandomValue(uint32_t start, uint32_t stop);
 
 /**
- * Gets the embeNET stack version
+ * @brief Gets the embeNET stack version.
  *
- * @return structure describing the version
+ * This function may be called at any time, including before @ref EMBENET_NODE_Init.
+ *
+ * @return Structure describing the stack version.
  */
 EMBENET_Version EMBENET_NODE_GetVersion(void);
+
+
+/**
+ * Returns the semantic version string of this component.
+ * @return char const*
+ */
+char const *EMBENET_NODE_GetVersionString(void);
 
 /** @} */
 
