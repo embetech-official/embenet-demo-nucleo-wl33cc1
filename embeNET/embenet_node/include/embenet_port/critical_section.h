@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.0.4
+ * @version   1.1.1
  * @purpose   embeNET PORT API
  * @brief     Critical section interface for the EMBENET NODE Port
  */
@@ -17,19 +17,24 @@ extern "C" {
 /**
  * @addtogroup embenet_node_port_critical_section Critical Section Interface
  *
- * This interface provides implementation of a critical section.
+ * This interface provides a critical section primitive used by the stack to protect shared state from concurrent ISR access.
+ * Critical sections may be nested; the implementation must track nesting depth and restore the interrupt state only when
+ * the outermost section is exited.
  * @{
  */
 
 /**
- * @brief Enters critical section
- * @note In most implementations resolves to disabling interrupt handling.
+ * @brief Enters a critical section.
+ *
+ * @note In most implementations this disables interrupt handling and saves the previous interrupt enable state.
  */
 void EMBENET_CRITICAL_SECTION_Enter(void);
 
 /**
- * @brief Exits critical section
- * @note In most implementations resolves to re-enabling interrupt handling, provided that handling was enabled before entering critical section.
+ * @brief Exits a critical section.
+ *
+ * @note In most implementations this re-enables interrupt handling, but only if interrupts were enabled before the
+ *       matching @ref EMBENET_CRITICAL_SECTION_Enter call (i.e. the saved interrupt state is restored, not unconditionally enabled).
  */
 void EMBENET_CRITICAL_SECTION_Exit(void);
 

@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.0.4
+ * @version   1.1.1
  * @purpose   embeNET PORT API
  * @brief     Interface for stack buffers allocation
  */
@@ -17,29 +17,33 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup embenet_node_port_alloc
+ * @addtogroup embenet_node_port_alloc Memory Allocator Interface
  *
- * This is interface to the memory allocation. This interface does not enforce the use of dynamically allocated memory. The memory pool may be
- * provided as static buffer.
+ * Interface for stack buffer allocation. Implementations are not required to use dynamic memory;
+ * a static buffer is a valid and common approach.
  * @{
  */
 
 /**
- * @brief Memory allocation function for stack buffers.
+ * @brief Allocates the stack's internal memory buffer.
  *
- * This function is called ONCE on initialization stage @ref EMBENET_NODE_Init.
+ * Called exactly once during @ref EMBENET_NODE_Init. The returned pointer must remain valid until
+ * @ref EMBENET_ALLOCATOR_Free is called.
  *
- * @param[in] size size of memory to allocate
- * @return pointer to memory with alignment of alignof(max_align_t)
+ * @param[in] size number of bytes to allocate
+ *
+ * @return Pointer to a memory block of at least @p size bytes with alignment of @c alignof(max_align_t);
+ *         must not be NULL.
  */
 void *EMBENET_ALLOCATOR_Alloc(size_t size);
 
 /**
- * @brief Memory deallocation function for stack buffers.
+ * @brief Releases the stack's internal memory buffer.
  *
- * This function is called ONCE on stack deinitialization stage @ref EMBENET_NODE_Deinit
+ * Called exactly once during @ref EMBENET_NODE_Deinit with the pointer previously returned by
+ * @ref EMBENET_ALLOCATOR_Alloc.
  *
- * @param[in] pool memory pool pointer, value returned by @ref EMBENET_ALLOCATOR_Alloc
+ * @param[in] pool pointer returned by @ref EMBENET_ALLOCATOR_Alloc; must not be NULL.
  */
 void EMBENET_ALLOCATOR_Free(void *pool);
 

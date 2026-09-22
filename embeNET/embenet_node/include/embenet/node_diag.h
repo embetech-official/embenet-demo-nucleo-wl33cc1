@@ -1,16 +1,16 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.0.4
+ * @version   1.1.1
  * @purpose   embeNET API
  * @brief     embeNET Node Diagnostic API
  */
-
+#pragma once
 #ifndef EMBENET_NODE_DIAG_H_
 #define EMBENET_NODE_DIAG_H_
 
-#include "node_defs.h"
+#include <embenet/node_defs.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -20,264 +20,264 @@ extern "C" {
 #endif
 
 /**
- * Duty cycle information
+ * @brief Raw radio duty cycle counters.
  */
 typedef struct {
-  uint64_t timeOverall; ///< Overall time of activity in microseconds
-  uint64_t timeTx;      ///< Time spent on frame transmission in microseconds
-  uint64_t timeRx;      ///< Time spent on listening or receiving in microseconds
-  uint64_t timeActive;  ///< Time spent on active state in microseconds
+  uint64_t timeOverall; ///< Total time of radio activity in microseconds.
+  uint64_t timeTx;      ///< Time spent transmitting frames in microseconds.
+  uint64_t timeRx;      ///< Time spent listening or receiving in microseconds.
+  uint64_t timeActive;  ///< Time spent in the ACTIVE radio state in microseconds.
 } EMBENET_NODE_DIAG_DutyCycleRawData;
 
 /**
- * Queue counters
+ * @brief Packet queue health counters measured over the last 1000 superframes.
  */
 typedef struct {
-
-  unsigned alert; ///< Number of times the packet reception queue reached the 'alert' condition during the last 1000 superframes. When the number of
-                  ///< packets in the packet reception queue reaches the alerting threshold value, the 'alert' condition is signaled.Such a superframe
-                  ///< is then counted.The value of queueAlertCnt is the number of such superframes in the last 1000 superframes.It gives information
-                  ///< about peak packet queue usage.
-
-  unsigned overflow; ///< Number of times the packet reception queue was overflown during the last 1000 superframes. When the packet reception queue
-                     ///< is overflown it cannot store any more packets and subsequent incoming packets are dropped. When that happens in a given
-                     ///< superframe, such a superframe is then counted. The value of queueOverflowCnt is the number of such superframes in the last
-                     ///< 1000 superframes. It gives information about packet queue failures.
+  unsigned alert;    ///< Number of superframes in which the reception queue reached the alert threshold.
+                     ///< A high value indicates peak queue pressure but no packet loss yet.
+  unsigned overflow; ///< Number of superframes in which the reception queue overflowed and incoming packets were dropped.
+                     ///< A non-zero value indicates packet loss.
 } EMBENET_NODE_DIAG_QueueCounters;
 
 /**
- * Neighbor role
+ * @brief Role of a neighbor relative to this node.
  */
 typedef enum {
-  EMBENET_NODE_DIAG_NEIGHBOR_ROLE_PARENT = 0,
-  EMBENET_NODE_DIAG_NEIGHBOR_ROLE_CHILD = 1,
-  EMBENET_NODE_DIAG_NEIGHBOR_ROLE_UNRELATED = 2,
+  EMBENET_NODE_DIAG_NEIGHBOR_ROLE_PARENT = 0,    ///< The neighbor is this node's current parent.
+  EMBENET_NODE_DIAG_NEIGHBOR_ROLE_CHILD = 1,     ///< The neighbor is a child of this node.
+  EMBENET_NODE_DIAG_NEIGHBOR_ROLE_UNRELATED = 2, ///< The neighbor has no routing relationship with this node.
 } EMBENET_NODE_DIAG_NeighborRole;
 
 /**
- * Neighbor diagnostic information
+ * @brief Diagnostic information for a single neighbor entry.
  */
 typedef struct {
-  uint64_t eui;                        ///< 0 if entry is inactive
-  int8_t rssi;                         ///< 127 denotes, that rssi could not be obtained
-  EMBENET_NODE_DIAG_NeighborRole role; ///< neighbor role
+  uint64_t eui;                        ///< EUI-64 of the neighbor; 0 if the entry is inactive.
+  int8_t rssi;                         ///< Last measured RSSI in dBm; INT8_MAX (127) if RSSI is unavailable.
+  EMBENET_NODE_DIAG_NeighborRole role; ///< Role of this neighbor relative to the local node.
 } EMBENET_NODE_DIAG_NeighborInfo;
 
 /**
- * Cell role
+ * @brief Role of a TSCH schedule cell.
  */
 typedef enum {
-  EMBENET_NODE_DIAG_CELL_ROLE_NONE = 0,
-  EMBENET_NODE_DIAG_CELL_ROLE_ADV = 1,
-  EMBENET_NODE_DIAG_CELL_ROLE_AUTO_DOWN = 2,
-  EMBENET_NODE_DIAG_CELL_ROLE_AUTO_UP = 3,
-  EMBENET_NODE_DIAG_CELL_ROLE_AUTO_UP_DOWN = 4,
-  EMBENET_NODE_DIAG_CELL_ROLE_MANAGED = 5,
-  EMBENET_NODE_DIAG_CELL_ROLE_APP = 6,
+  EMBENET_NODE_DIAG_CELL_ROLE_NONE = 0,         ///< Entry is inactive.
+  EMBENET_NODE_DIAG_CELL_ROLE_ADV = 1,          ///< Advertisement cell.
+  EMBENET_NODE_DIAG_CELL_ROLE_AUTO_DOWN = 2,    ///< Autonomous downlink cell.
+  EMBENET_NODE_DIAG_CELL_ROLE_AUTO_UP = 3,      ///< Autonomous uplink cell.
+  EMBENET_NODE_DIAG_CELL_ROLE_AUTO_UP_DOWN = 4, ///< Autonomous bidirectional cell.
+  EMBENET_NODE_DIAG_CELL_ROLE_MANAGED = 5,      ///< Managed cell negotiated via 6top.
+  EMBENET_NODE_DIAG_CELL_ROLE_APP = 6,          ///< Application-defined cell.
 } EMBENET_NODE_DIAG_CellRole;
 
 /**
- * Cell type
+ * @brief Direction of a TSCH schedule cell.
  */
 typedef enum {
-  EMBENET_NODE_DIAG_CELL_TYPE_NONE = 0,
-  EMBENET_NODE_DIAG_CELL_TYPE_TX = 1,
-  EMBENET_NODE_DIAG_CELL_TYPE_RX = 2,
-  EMBENET_NODE_DIAG_CELL_TYPE_TXRX = 3,
+  EMBENET_NODE_DIAG_CELL_TYPE_NONE = 0, ///< Entry is inactive.
+  EMBENET_NODE_DIAG_CELL_TYPE_TX = 1,   ///< Transmit cell.
+  EMBENET_NODE_DIAG_CELL_TYPE_RX = 2,   ///< Receive cell.
+  EMBENET_NODE_DIAG_CELL_TYPE_TXRX = 3, ///< Shared TX/RX cell.
 } EMBENET_NODE_DIAG_CellType;
 
 /**
- * Cell diagnostic information
+ * @brief Diagnostic information for a single TSCH schedule cell.
  */
 typedef struct {
-  EMBENET_NODE_DIAG_CellRole role; ///< EMBENET_NODE_DIAG_CELL_ROLE_NONE if entry is inactive
-  EMBENET_NODE_DIAG_CellType type; ///< EMBENET_NODE_DIAG_CELL_TYPE_NONE if entry is inactive
-  uint16_t pdr;                    ///< expressed in 0.01% unit
-  uint8_t slotOffset;              ///< slot offset
-  uint8_t channelOffset;           ///< channel offset
-  uint64_t companionEui;           ///< companion EUI
+  EMBENET_NODE_DIAG_CellRole role; ///< Cell role; @ref EMBENET_NODE_DIAG_CELL_ROLE_NONE if the entry is inactive.
+  EMBENET_NODE_DIAG_CellType type; ///< Cell direction; @ref EMBENET_NODE_DIAG_CELL_TYPE_NONE if the entry is inactive.
+  uint16_t pdr;                    ///< Packet Delivery Rate expressed in 0.01% units (0..10000).
+  uint8_t slotOffset;              ///< Slot offset within the slotframe.
+  uint8_t channelOffset;           ///< Channel offset.
+  uint64_t companionEui;           ///< EUI-64 of the cell's companion node (peer for TX, source for RX).
 } EMBENET_NODE_DIAG_CellInfo;
 
 /**
- * Return if node operates as ROOT.
+ * @brief Returns whether the node is operating as a root node.
  *
- * @retval true - node operates as root
- * @retval false - node does not operate as root
+ * @retval true  the node is operating as a root node
+ * @retval false the node is not operating as a root node
  */
 bool EMBENET_NODE_DIAG_IsRoot(void);
 
 /**
- * Returns parent EUI.
+ * @brief Returns the EUI-64 of the current parent node.
  *
  * @warning Aborts when called on an uninitialized stack.
- * @return parent EUI, EMBENET_EUI64_INVALID if could not obtain parent EUI
+ *
+ * @return EUI-64 of the parent node, or `EMBENET_EUI64_INVALID` if the parent EUI-64 is not available.
  */
 EMBENET_EUI64 EMBENET_NODE_DIAG_GetParentEUI64(void);
 
 /**
- * Returns parent RSSI.
+ * @brief Returns the RSSI of the last frame received from the parent node.
  *
  * @warning Aborts when called on an uninitialized stack.
- * @return parent RSSI, INT8_MAX if RSSI is not available
+ *
+ * @return Parent RSSI in dBm, or INT8_MAX if the RSSI is not available.
  */
 int8_t EMBENET_NODE_DIAG_GetParentRSSI(void);
 
 /**
- * Returns parent PDR.
+ * @brief Returns the Packet Delivery Rate (PDR) to the parent node.
  *
  * @warning Aborts when called on an uninitialized stack.
- * @return current Packet Delivery Rate to parent expressed in 0.01% units (0..10000), 0 if it is not possible to obtain
+ *
+ * @return PDR expressed in 0.01% units (0..10000), or 0 if not available.
  */
 uint16_t EMBENET_NODE_DIAG_GetParentPDR(void);
 
 /**
- * Return node's DAGRank.
+ * @brief Returns the node's RPL DAGRank.
  *
  * @warning Aborts when called on an uninitialized stack.
- * @return node's DAGRank, UINT16_MAX if it is not possible to obtain
+ *
+ * @return DAGRank value, or UINT16_MAX if not available.
  */
 uint16_t EMBENET_NODE_DIAG_GetDAGRank(void);
 
 /**
- * Returns sum of managed TX cells to parent node.
+ * @brief Returns the total number of managed uplink TX cells to the parent node.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return up cells count, 0 if it is not possible to obtain
+ * @return Number of uplink cells, or 0 if not available.
  */
 unsigned EMBENET_NODE_DIAG_GetUpCells(void);
 
 /**
- * Returns uplink packet rate.
+ * @brief Returns the uplink packet utilization rate.
  *
- * @note Packet rate is averaged through all managed cells to parent node.
- * @note It is defined as the rate of used cells to all passed cells to parent node.
+ * @note Averaged across all managed uplink cells to the parent node.
+ * @note Defined as the ratio of used cells to total elapsed cells, expressed in 0.01% units.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return up packet rate, 0 if it is not possible to obtain
+ * @return Uplink packet rate in 0.01% units (0..10000), or 0 if not available.
  */
 uint16_t EMBENET_NODE_DIAG_GetUpPacketRate(void);
 
 /**
- * Returns sum of RX cells from child nodes.
+ * @brief Returns the total number of autonomous downlink RX cells from child nodes.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return down cells count, 0 if it is not possible to obtain
+ * @return Number of downlink cells, or 0 if not available.
  */
 unsigned EMBENET_NODE_DIAG_GetDownCells(void);
 
 /**
- * Returns downlink packet rate.
+ * @brief Returns the downlink packet utilization rate.
  *
- * @note Packet rate is averaged through all downlink autonomous cells (autonomous cells to listen for packets from parent).
- * @note It is defined as the rate of used cells to all passed cells from parent node.
+ * @note Averaged across all autonomous downlink cells (cells used to listen for packets from the parent).
+ * @note Defined as the ratio of used cells to total elapsed cells, expressed in 0.01% units.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return up packet rate in 0.01% unit, 0 if it is not possible to obtain
+ * @return Downlink packet rate in 0.01% units (0..10000), or 0 if not available.
  */
 uint16_t EMBENET_NODE_DIAG_GetDownPacketRate(void);
 
 /**
- * Returns radio ready state duty cycle.
+ * @brief Returns the radio READY state duty cycle.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return radio READY state duty cycle in 0.01% unit, 0 if it is not possible to obtain
+ * @return Radio READY state duty cycle in 0.01% units (0..10000), or 0 if not available.
  */
 uint16_t EMBENET_NODE_DIAG_GetRadioReadyDutyCycle(void);
 
 /**
- * Returns radio TX duty cycle.
+ * @brief Returns the radio TX state duty cycle.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return radio TX state duty cycle in 0.01% unit, 0 if it is not possible to obtain
+ * @return Radio TX state duty cycle in 0.01% units (0..10000), or 0 if not available.
  */
 uint16_t EMBENET_NODE_DIAG_GetRadioTxDutyCycle(void);
 
 /**
- * Returns radio RX duty cycle.
+ * @brief Returns the radio RX state duty cycle.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return radio RX state duty cycle in 0.01% unit, 0 if it is not possible to obtain
+ * @return Radio RX state duty cycle in 0.01% units (0..10000), or 0 if not available.
  */
 uint16_t EMBENET_NODE_DIAG_GetRadioRxDutyCycle(void);
 
 /**
- * Returns radio duty cycle RAW data.
+ * @brief Returns raw radio duty cycle counters.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return @ref EMBENET_NODE_DIAG_DutyCycleRawData, zeroed structure if it is not possible to obtain
+ * @return @ref EMBENET_NODE_DIAG_DutyCycleRawData structure; all fields are zero if the data is not available.
  */
 EMBENET_NODE_DIAG_DutyCycleRawData EMBENET_NODE_DIAG_GetRadioDutyCycleRaw(void);
 
 /**
- * Returns queue overflow and alarm threshold counters.
+ * @brief Returns packet queue alert and overflow counters.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return @ref EMBENET_NODE_DIAG_QueueCounters, zeroed structure if it is not possible to obtain
+ * @return @ref EMBENET_NODE_DIAG_QueueCounters structure; all fields are zero if the data is not available.
  */
 EMBENET_NODE_DIAG_QueueCounters EMBENET_NODE_DIAG_GetQueueThresholdAndOverflowCounters(void);
 
 /**
- * Returns neighbor count.
+ * @brief Returns the number of active neighbors.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return neighbors count that are active, 0 if it is not possible to obtain
+ * @return Number of currently active neighbor entries, or 0 if not available.
  */
 unsigned EMBENET_NODE_DIAG_GetNeighborCount(void);
 
 /**
- * Returns neighbor information.
+ * @brief Returns diagnostic information for a neighbor by index.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] index - should be in range of <0, EMBENET_NODE_DIAG_GetNeighborCount()-1>
- * @return @ref EMBENET_NODE_DIAG_NeighborInfo, zeroed structure if it is not possible to obtain
+ * @param[in] index neighbor index in the range [0, @ref EMBENET_NODE_DIAG_GetNeighborCount() - 1]
+ *
+ * @return @ref EMBENET_NODE_DIAG_NeighborInfo for the requested neighbor; zeroed structure if the index is out of range.
  */
 EMBENET_NODE_DIAG_NeighborInfo EMBENET_NODE_DIAG_GetNeighborInfo(unsigned index);
 
 /**
- * Returns active communication cells count.
+ * @brief Returns the number of active TSCH schedule cells.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return active cells count, if it is not possible to obtain
+ * @return Number of currently active schedule cell entries, or 0 if not available.
  */
 unsigned EMBENET_NODE_DIAG_GetCellsCount(void);
 
 /**
- * Returns cell information.
+ * @brief Returns diagnostic information for a schedule cell by index.
  *
  * @warning Aborts when called on an uninitialized stack.
  *
- * @param[in] index - should be in range of <0, EMBENET_NODE_DIAG_GetCellsCount()-1>
- * @return @ref EMBENET_NODE_DIAG_CellInfo, zeroed structure if it is not possible to obtain
+ * @param[in] index cell index in the range [0, @ref EMBENET_NODE_DIAG_GetCellsCount() - 1]
+ *
+ * @return @ref EMBENET_NODE_DIAG_CellInfo for the requested cell; zeroed structure if the index is out of range.
  */
 EMBENET_NODE_DIAG_CellInfo EMBENET_NODE_DIAG_GetCellInfo(unsigned index);
 
 /**
- * Returns slotframe length in slots count.
+ * @brief Returns the slotframe length in number of slots.
  *
- * @note Multiply @ref EMBENET_NODE_DIAG_GetSlotframeLength() by @ref EMBENET_NODE_DIAG_GetSlotDurationUs() to get slotframe length.
+ * @note Multiply by @ref EMBENET_NODE_DIAG_GetSlotDurationUs() to obtain the slotframe duration in microseconds.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return slots count in superframe, 0 if it is not possible to obtain
+ * @return Number of slots per slotframe, or 0 if not available.
  */
 unsigned EMBENET_NODE_DIAG_GetSlotframeLength(void);
 
 /**
- * Returns slot duration in microseconds.
+ * @brief Returns the duration of a single TSCH slot in microseconds.
  *
- * @note Multiply @ref EMBENET_NODE_DIAG_GetSlotframeLength() by @ref EMBENET_NODE_DIAG_GetSlotDurationUs() to get slotframe length.
+ * @note Multiply by @ref EMBENET_NODE_DIAG_GetSlotframeLength() to obtain the slotframe duration in microseconds.
  * @warning Aborts when called on an uninitialized stack.
  *
- * @return slot duration, 0 if it is not possible to obtain
+ * @return Slot duration in microseconds, or 0 if not available.
  */
 unsigned EMBENET_NODE_DIAG_GetSlotDurationUs(void);
 
@@ -285,4 +285,4 @@ unsigned EMBENET_NODE_DIAG_GetSlotDurationUs(void);
 }
 #endif
 
-#endif /* EMBENET_NODE_DIAG_H_ */
+#endif

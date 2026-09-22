@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.0.4
+ * @version   1.1.1
  * @purpose   embeNET PORT API
  * @brief     Capabilities of the EMBENET NODE Port
  */
@@ -34,26 +34,28 @@ extern "C" {
  */
 
 /**
- * Forward declaration
+ * @brief Opaque stack configuration structure. Defined internally by the stack; do not access directly.
  */
 typedef struct EMBENET_Config EMBENET_Config;
 
 /**
- * Capabilities getter, called ONCE at initialization.
+ * @brief Returns the port-specific stack configuration.
  *
- * Capabilities templates are available.
+ * Called exactly once during @ref EMBENET_NODE_Init. The returned pointer must remain valid for the
+ * lifetime of the stack (until @ref EMBENET_NODE_Deinit). Pre-defined configuration templates are
+ * available as an alternative to writing a custom implementation (see below).
  *
- * @return Not NULL, capability structure pointer.
+ * @return Pointer to the configuration structure; must not be NULL.
  */
 EMBENET_Config const *EMBENET_CAPABILITIES_Init(void);
 
-/// @brief Template configuration structure for ~250 nodes topologies working in 863-870MHz band using SUN PHY OM1.
+/// Template configuration for networks of up to ~250 nodes operating in the 863–870 MHz band using SUN PHY OM1.
 extern EMBENET_Config const *const embenetNodeConfigTemplate_863_870Mhz_250nodes;
-/// @brief Template configuration structure for demos working in 863-870 band using SUN PHY OM1.
+/// Template configuration for demo networks of up to ~10 nodes operating in the 863–870 MHz band using SUN PHY OM1.
 extern EMBENET_Config const *const embenetNodeConfigTemplate_863_870Mhz_10nodes_demo;
-/// @brief Template configuration structure for ~1000 nodes topologies working in 2400-2480MHz band using BLE PHY.
+/// Template configuration for networks of up to ~1000 nodes operating in the 2400–2480 MHz band using BLE PHY.
 extern EMBENET_Config const *const embenetNodeConfigTemplate_2400_2480Mhz_BLE_PHY_1000nodes;
-/// @brief Template configuration structure for demos working in 2400-2480MHz band using BLE PHY.
+/// Template configuration for demo networks of up to ~10 nodes operating in the 2400–2480 MHz band using BLE PHY.
 extern EMBENET_Config const *const embenetNodeConfigTemplate_2400_2480Mhz_BLE_PHY_10nodes_demo;
 
 /** @} */

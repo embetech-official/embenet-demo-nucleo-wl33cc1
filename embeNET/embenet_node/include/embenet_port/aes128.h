@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.0.4
+ * @version   1.1.1
  * @purpose   embeNET PORT API
  * @brief     AES-128 interface for the EMBENET NODE Port
  */
@@ -25,48 +25,45 @@ extern "C" {
  */
 
 /**
- * @brief Initializes the AES-128 ciphering algorithm.
+ * @brief Initializes the AES-128 ciphering module.
  *
- * The function will be called by the network stack BEFORE any other AES API functions will be invoked, allowing initialization of necessary resources
- * (e.g. hardware accelerator or LUTs)
+ * Called by the stack once before any other AES API function is invoked.
+ * Use this function to set up any required resources (e.g. hardware accelerator, lookup tables).
  */
 void EMBENET_AES128_Init(void);
 
 /**
- * @brief Deinitializes the AES-128 ciphering algorithm.
+ * @brief Deinitializes the AES-128 ciphering module.
  *
- * This function is only called when the stack is being deinitialized.
+ * Called by the stack when it is being deinitialized. Release any resources acquired in @ref EMBENET_AES128_Init.
  */
 void EMBENET_AES128_Deinit(void);
 
 /**
- * @brief Sets the AES-128 key to be used in further encryption and decryption operations
+ * @brief Sets the AES-128 key for subsequent encrypt and decrypt operations.
  *
- * The key set by this function should be used during the subsequent calls to @ref EMBENET_AES128_Encrypt and @ref EMBENET_AES128_Decrypt
+ * The key set by this function is used in all subsequent calls to @ref EMBENET_AES128_Encrypt and @ref EMBENET_AES128_Decrypt
+ * until this function is called again.
  *
- * @param[in]        key 16 Bytes long secret key
+ * @param[in] key pointer to a 16-byte secret key; must not be NULL.
  */
 void EMBENET_AES128_SetKey(uint8_t const key[16U]);
 
 /**
- * @brief Encrypts a 16 byte data chunk using AES-128 algorithm
+ * @brief Encrypts a 16-byte block in place using AES-128.
  *
- * This function should encrypt the given 16 bytes of data overwriting the original plaintext data with the ciphered representation.
+ * Overwrites @p data with the AES-128 ciphertext of the original plaintext.
  *
- * @param[inout] data 16 byte long plaintext data to be encrypted.
- *
- * @note The function shall overwrite the plaintext data in place
+ * @param[in,out] data 16-byte buffer containing plaintext on entry; contains ciphertext on return. Must not be NULL.
  */
 void EMBENET_AES128_Encrypt(uint8_t data[16U]);
 
 /**
- * @brief Decrypts a 16 byte data chunk using AES-128 algorithm
+ * @brief Decrypts a 16-byte block in place using AES-128.
  *
- * This function should decrypt the given 16 bytes of data overwriting the original ciphered data with the plaintext representation.
+ * Overwrites @p data with the AES-128 plaintext of the original ciphertext.
  *
- * @param[inout] data 16 byte long ciphered data to be decrypted.
- *
- * @note The function WILL overwrite encrypted data in place.
+ * @param[in,out] data 16-byte buffer containing ciphertext on entry; contains plaintext on return. Must not be NULL.
  */
 void EMBENET_AES128_Decrypt(uint8_t data[16U]);
 

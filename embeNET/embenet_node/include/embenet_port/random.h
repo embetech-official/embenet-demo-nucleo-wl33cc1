@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.0.4
+ * @version   1.1.1
  * @purpose   embeNET PORT API
  * @brief     Random number generator interface for the EMBENET NODE Port
  */
@@ -19,14 +19,17 @@ extern "C" {
 /**
  * @addtogroup embenet_node_port_random Random Number Generator Interface
  *
- * Provides an interface to the random number generator used by the embeNET Node stack.
+ * Provides an interface to the hardware or software random number generator used by the embeNET Node stack.
  * @{
  */
 
 /**
- * @brief Gets a random number in range [0, UINT32_MAX]
+ * @brief Returns a uniformly distributed random 32-bit value.
  *
- * This function should return a TRUE random 32-bit number.
+ * The implementation should use a hardware TRNG where available. A cryptographically weak or predictable
+ * source will degrade network security.
+ *
+ * @return Random value in the range [0, UINT32_MAX].
  */
 uint32_t EMBENET_RANDOM_Get(void);
 
