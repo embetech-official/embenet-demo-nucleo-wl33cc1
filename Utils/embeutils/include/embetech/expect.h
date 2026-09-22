@@ -1,5 +1,14 @@
-#ifndef EXPECT_H_
-#define EXPECT_H_
+/**
+ * @file
+ * @license   MIT License
+ * @copyright Embetech sp. z o.o.
+ * @version   1.3.2
+ */
+
+#ifndef EMBEUTILS_EXPECT_H_
+#define EMBEUTILS_EXPECT_H_
+
+#include <embetech/compiler_support.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,7 +49,7 @@ extern "C" {
  *
  * @code
  * // This function returns one of 5 coefficients. For coeffNo >= 5 it always returns 0.0.
- * int getCoefficient(unsigned int coeffNo) {
+ * double getCoefficient(unsigned int coeffNo) {
  *     EXPECT(coeffNo < 5) OR_RETURN (0.0)
  *
  *     static double coeffTab[5] = { 1.0, 1.1, 1.2, 1.3, 1.4 };
@@ -61,7 +70,7 @@ extern "C" {
  *
  * @code
  * // This function returns one of 5 coefficients. For coeffNo >= 5 it causes the program to abort.
- * int getCoefficient(unsigned int coeffNo) {
+ * double getCoefficient(unsigned int coeffNo) {
  *     EXPECT(coeffNo < 5) OR_ABORT()
  *
  *     static double coeffTab[5] = { 1.0, 1.1, 1.2, 1.3, 1.4 };
@@ -86,7 +95,7 @@ extern "C" {
  *
  * <b>Runtime verbosity of abort handler</b>
  *
- * During initial development of the application, it is benefitial to quickly get the information about the abort location, and reason.
+ * During initial development of the application, it is beneficial to quickly get information about the abort location and reason.
  * To enable this, you have to provide the following macro:
  * @code
  * EMBEUTILS_EXPECT_VERBOSE=1
@@ -96,56 +105,90 @@ extern "C" {
  */
 
 #ifndef EMBEUTILS_EXPECT_VERBOSE
-#define EMBEUTILS_EXPECT_VERBOSE 0 ///< When enabled, increases verbosity of information passed to EXPECT_OnAbortHandler
-                                          ///< @note Enabling this macro WILL generate measurable memory overhead
+/**
+ * When enabled, increases verbosity of information passed to EXPECT_OnAbortHandler
+ * @note Enabling this macro WILL generate measurable memory overhead
+ */
+#define EMBEUTILS_EXPECT_VERBOSE 0
 #endif
 
-/// @internal @brief Noreturn attribute
-#define EXPECT_INTERNAL_NORETURN __attribute__((noreturn))
 /**
- * Abort handler. The program MUST not continue operation after calling this function. Its context MAY be used to safely restart the program
- * @param[in] why message describing reason why the contract was violated
- * @param[in] file printable filename
- * @param[in] line line where check was performed
+ * @brief Abort handler called when an unrecoverable contract violation is detected.
+ *
+ * The program MUST NOT continue after this function is called. Typical implementations
+ * log the error, enter a safe state, then halt or reset the system.
+ *
+ * @param[in] why  Message describing why the contract was violated.
+ * @param[in] file Source file where the check was performed (or @c "<verbose-disabled>" if verbosity is off).
+ * @param[in] line Source line where the check was performed (or @c 0 if verbosity is off).
  */
-EXPECT_INTERNAL_NORETURN void EXPECT_OnAbortHandler(char const *why, char const *file, int line);
+EMBEUTILS_NORETURN void EXPECT_OnAbortHandler(char const *why, char const *file, int line);
 
 /**
- * @brief Checks whether expression expr holds true value
- * @note the macro MUST be followed by either OR_RETURN, OR_ABORT, or OR_THROW macro
+ * @brief Checks whether the expression @p expr holds a true value.
+ * @param[in] expr Expression to evaluate; the subsequent action is taken when it is false.
+ * @note Must be followed by @ref OR_RETURN, or @ref OR_ABORT.
+ *
+ * @code
+ * int my_function(int *ptr) {
+ *     EXPECT(NULL != ptr) OR_RETURN(-1);
+ *     return *ptr;
+ * }
+ * @endcode
  */
 #define EXPECT(expr) if(!(expr))
 
 /**
  * @def EXPECT_EXTRA(expr)
  * @copydoc EXPECT
- * As the evaluation of the expression may be time consuming, it is possible to globally disable this kind of runtime checks by defining
- * EMBEUTILS_EXTRA_CHECKS to 0
+ * As the evaluation of the expression may be time-consuming, these checks can be globally disabled by setting
+ * @c EMBEUTILS_EXTRA_CHECKS to @c 0.
  */
-#if(defined EMBEUTILS_EXTRA_CHECKS) && (EMBEUTILS_EXTRA_CHECKS == 1)
+#if (1 == EMBEUTILS_EXTRA_CHECKS)
 #define EXPECT_EXTRA(expr) EXPECT(expr)
 #else
-#define EXPECT_EXTRA(expr) if(0)
+#define EXPECT_EXTRA(expr) if(!(expr) && 0)
 #endif
 
 /**
- * @brief Calls directly the abort handler (EXPECT_OnAbortHandler) with given reason
- * @param[in] why Error message
- * This macro must be preceded either EXPECT, or EXPECT_EXTRA macro
+ * @brief Directly calls the abort handler (EXPECT_OnAbortHandler) with the given reason.
+ * @param[in] why Error message describing the violated contract
+ * @note This macro must be preceded by either EXPECT or EXPECT_EXTRA.
+ *
+ * @code
+ * void my_function(int *ptr) {
+ *     EXPECT(NULL != ptr) EXPECT_ABORT("ptr must not be null");
+ *     *ptr = 42;
+ * }
+ * @endcode
  */
 #define EXPECT_ABORT(why) EXPECT_INTERNAL_CALL_ABORT_HANDLER(why)
 
 /**
- * @brief Calls the abort handler (EXPECT_OnAbortHandler) with given reason
- * @param[in] why Error message
- * This macro must be preceded either EXPECT, or EXPECT_EXTRA macro
+ * @brief Calls the abort handler (EXPECT_OnAbortHandler) with the given reason.
+ * @param[in] why Error message describing the violated contract
+ * @note This macro must be preceded by either EXPECT or EXPECT_EXTRA.
+ *
+ * @code
+ * void my_function(int *ptr) {
+ *     EXPECT(NULL != ptr) OR_ABORT("ptr must not be null");
+ *     *ptr = 42;
+ * }
+ * @endcode
  */
 #define OR_ABORT(why) EXPECT_INTERNAL_CALL_ABORT_HANDLER(why)
 
 /**
- * @brief Returns from the function with given error value
- * @param[in] retval Error value to be returned
- * This macro must be preceded either EXPECT, or EXPECT_EXTRA macro
+ * @brief Returns from the enclosing function with the given value.
+ * @param[in] retval Value to return when the EXPECT condition is false.
+ * @note This macro must be preceded by either EXPECT or EXPECT_EXTRA.
+ *
+ * @code
+ * int my_function(int *ptr) {
+ *     EXPECT(NULL != ptr) OR_RETURN(-1);
+ *     return *ptr;
+ * }
+ * @endcode
  */
 #define OR_RETURN(retval) return retval
 
@@ -156,26 +199,9 @@ EXPECT_INTERNAL_NORETURN void EXPECT_OnAbortHandler(char const *why, char const 
 #endif
 
 #ifdef __cplusplus
-/**
- * @def OR_THROW(expr)
- * @brief Throws exception expr.
- * @param[in] expr instance of exception object to be throw.
- *
- * When exceptions are disabled the operation is the same as OR_ABORT
- */
-
-#ifdef __cpp_exceptions
-#define OR_THROW(expr) throw(expr)
-#else
-#define EXPECT_INTERNAL_STR(x) #x
-#define OR_THROW(expr) EXPECT_OnAbortHandler("Caught exception: " EXPECT_INTERNAL_STR(expr), __FILE__, __LINE__)
-#endif
-#endif
-
-#ifdef __cplusplus
 }
 #endif
 
 /** @} */
 
-#endif // EXPECT_H_
+#endif
