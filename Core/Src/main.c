@@ -108,7 +108,7 @@ int iar_fputc(int ch);
  * @param[in] quickJoinCredentials pointer to the Quick Join Credentials that MAY be stored by the user to facilitate rejoining process.
  */
 static void onJoined(EMBENET_PANID panId, const EMBENET_NODE_QuickJoinCredentials *quickJoinCredentials) {
-    printf("Joined network with PANID: 0x%04" PRIx16 "\n\r", panId);
+    printf("Joined network with PANID: x%04" PRIx16 "\n\r", panId);
 
     // Start ENMS Service that provides network-wide telemetry information
     EnmsResult enmsStartStatus = ENMS_NODE_Start(&enmsNode);
@@ -158,9 +158,14 @@ static void onLeft(void) {
  *
  * NOTE: This callback is included in this demo only for debugging purposes
  */
-static void onJoinAttempt(EMBENET_PANID panId, const void *panData, size_t panDataSize) {
-    printf("Node is attempting to join the network with PANID 0x%04" PRIx16 "\n\r", panId);
-    printf("Network-wide data (%uB)\n\r", (unsigned)panDataSize);
+static void onJoinAttempt(EMBENET_PANID panId, uint8_t const *panData, size_t panDataSize) {
+    char pan_string[17];
+    size_t pan_string_size = (panDataSize >= sizeof(pan_string)) ? sizeof(pan_string) - 1 : panDataSize;
+    memcpy(pan_string, panData, pan_string_size);
+    pan_string[pan_string_size] = '\0';
+
+    printf("Node is attempting to join the network with PANID x%04" PRIx16 "\n\r", panId);
+    printf("Network-wide data (%uB): %s\n\r", (unsigned)panDataSize, pan_string);
 }
 
 
@@ -244,7 +249,7 @@ int main(void)
     LOGGER_SetOutput(loggerOutput, NULL);
     LOGGER_SetRuntimeLevel(LOGGER_LEVEL_TRACE);
     // You can change this to LOGGER_Enable to enable more logs from embeNET:
-    LOGGER_Disable();
+//    LOGGER_Disable();
 
     printf("\n\r"
             "+---------------------------------------------+\n\r"
@@ -281,7 +286,7 @@ int main(void)
     synchronous_led_task_init();
 
 #if 1 == IS_ROOT
-    printf("Acting as root with UID: 0x%x%08x\n\r", (unsigned)(EMBENET_NODE_GetUID()>>32), (unsigned)(EMBENET_NODE_GetUID()));
+    printf("Acting as root with UID: x%x%08x\n\r", (unsigned)(EMBENET_NODE_GetUID()>>32), (unsigned)(EMBENET_NODE_GetUID()));
     // When the application is built for Root node, start as root instead of joining the network
     if (EMBENET_RESULT_OK == EMBENET_NODE_RootStart(NULL, 0)) {
     	printf("Root started successfully\n\r");
@@ -289,7 +294,7 @@ int main(void)
     	printf("Failed to start as root!\n\r");
     }
 #else
-    printf("Acting as node with UID: 0x%x%08x\n\r", (unsigned)(EMBENET_NODE_GetUID()>>32), (unsigned)(EMBENET_NODE_GetUID()));
+    printf("Acting as node with UID: x%x%08x\n\r", (unsigned)(EMBENET_NODE_GetUID()>>32), (unsigned)(EMBENET_NODE_GetUID()));
 
     // Initialize exemplary, user-defined custom UDP service
     udp_service_init();
