@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   Commercial
+ * @license   See LICENSE.txt
  * @copyright Embetech sp. z o.o.
- * @version   1.1.4
+ * @version   1.1.5
  * @purpose   ENMS service
  * @brief     ENMS BR service API
  */
