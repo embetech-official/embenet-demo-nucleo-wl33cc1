@@ -249,7 +249,7 @@ int main(void)
     LOGGER_SetOutput(loggerOutput, NULL);
     LOGGER_SetRuntimeLevel(LOGGER_LEVEL_TRACE);
     // You can change this to LOGGER_Enable to enable more logs from embeNET:
-//    LOGGER_Disable();
+    LOGGER_Disable();
 
     printf("\n\r"
             "+---------------------------------------------+\n\r"
