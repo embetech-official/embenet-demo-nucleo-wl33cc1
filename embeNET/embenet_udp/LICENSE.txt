@@ -1,0 +1,22 @@
+embeNET UDP Library — License Notice
+Copyright (c) 2026 Embetech sp. z o.o. All rights reserved.
+
+This software library ("embeNET UDP Library") is the proprietary product of
+Embetech sp. z o.o. ("Embetech"). It is made available under one of two
+licenses, depending on how you obtained it:
+
+  - LicenseRef-Embetech-Commercial — full commercial use under a signed
+    agreement with Embetech. See LICENSES/LicenseRef-Embetech-Commercial.txt
+
+  - LicenseRef-Embetech-Evaluation — time-limited, non-production evaluation.
+    See LICENSES/LicenseRef-Embetech-Evaluation.txt
+
+If you are unsure which license applies to you, or wish to obtain a
+commercial license, contact:
+
+  Embetech sp. z o.o.
+  ul. Czarnowiejska 36/017
+  30-054 Krakow, Poland
+
+  E-mail : contact@embe.tech
+  Web    : www.embe.tech

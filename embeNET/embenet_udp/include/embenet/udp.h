@@ -1,8 +1,8 @@
 /**
  * @file
- * @license   ${PROJECT_LICENSE}
- * @copyright ${PROJECT_COPYRIGHT}
- * @version   ${PROJECT_VERSION}
+ * @license   See LICENSE.txt
+ * @copyright Embetech sp. z o.o.
+ * @version   1.2.1
  * @brief     EMBENET UDP API
  */
 
